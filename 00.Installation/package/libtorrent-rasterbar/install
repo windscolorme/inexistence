@@ -18,6 +18,9 @@ usage_for_me() {
 
 ################################################################################################ Get options
 
+unset AppName AppNameLower Need_SourceCode pm_action \
+      LogRootPath LogTimes DebLocation SCLocation LOCKLocation OutputLOG
+
 function show_usage() { echo " Invalid option $1
 Usage:
       -m        Install mode, can only be specified as apt, deb, deb2, deb3 or source
@@ -45,21 +48,21 @@ esac ; done
 
 ################################################################################################
 
-LogRootPath=/log/inexistence
-[[ -z $LogTimes ]] && LogTimes=$LogRootPath/single
-OutputLOG=$LogTimes/install/libtorrent-rasterbar.txt    # /dev/null
-DebLocation=$LogTimes/deb
-SCLocation=$LogTimes/source
-LOCKLocation=$LogRootPath/lock
-
-if [[ -f /etc/inexistence/00.Installation/function ]]; then
-    source /etc/inexistence/00.Installation/function --output $OutputLOG
-else
-    wget -qO /tmp/function https://github.com/Aniverse/inexistence/raw/master/00.Installation/function
-    source /tmp/function --output $OutputLOG
-fi
+AppName=libtorrent-rasterbar
+AppNameLower=dlibtorrent-rasterbar
+Need_SourceCode=yes
+pm_action=install
 
 git_repo="https://github.com/arvidn/libtorrent"
+
+if [[ -f /etc/inexistence/00.Installation/function ]]; then
+    source /etc/inexistence/00.Installation/function
+else
+    wget -qO /tmp/function https://github.com/Aniverse/inexistence/raw/master/00.Installation/function
+    source /tmp/function
+fi
+
+set_variables_log_location
 
 ################################################################################################
 
