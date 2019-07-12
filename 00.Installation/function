@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 #
-script_update=2019.07.10
-script_version=r10007
+script_update=2019.07.12
+script_version=r10018
 ################################################################################################ Usage Guide
 
 usage_guide() {
@@ -22,7 +22,7 @@ OPTS=$(getopt -o o: -al output: -- "$@")
 eval set -- "$OPTS"
 
 while [ -n "$1" ] ; do case "$1" in
-    -o | --output ) output="$2" ; shift 2 ;;
+    -o | --output ) OutputLOG="$2" ; shift 2 ;;
     -- ) break ;;
 esac ; done
 
@@ -42,8 +42,10 @@ CW="${bold}${baihongse} ERROR ${jiacu}" ; ZY="${baihongse}${bold} ATTENTION ${ji
 
 ################################################################################################
 
+self_location="$0"
 arch=$(uname -m)
 DISTRO=$(awk -F'[= "]' '/PRETTY_NAME/{print $3}' /etc/os-release)
+DISTROL=$(echo $DISTRO | tr 'A-Z' 'a-z')
 CODENAME=$( cat /etc/os-release | grep VERSION= | tr '[A-Z]' '[a-z]' | sed 's/\"\|(\|)\|[0-9.,]\|version\|lts//g' | awk '{print $2}' )
 [[ $DISTRO == Ubuntu ]] && osversion=$(grep Ubuntu /etc/issue | head -1 | grep -oE  "[0-9.]+")
 [[ $DISTRO == Debian ]] && osversion=$(cat /etc/debian_version)
@@ -56,14 +58,24 @@ export local_packages=/etc/inexistence/00.Installation
 ################################################################################################ Basic functions
 ################################################################################################
 
+
+# These codes are from teddysun
 function version_ge(){ test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" == "$1" ; }
 
-function check_status() {
-local LockName=$1
-[[   -f /tmp/$LockName.1.lock ]] && echo -e " ${green}${bold}DONE${normal}"
-[[   -f /tmp/$LockName.2.lock ]] && echo -e " ${red}${bold}FAILED${normal}"
-[[ ! -f /tmp/$LockName.1.lock ]] && [[ ! -f /tmp/$LockName.2.lock ]] && echo -e " ${red}${bold}Unknown State${normal}" ; }
 
+function check_status() {
+    local LockName=$1
+    if [[ -f /tmp/$LockName.1.lock ]]; then
+        echo -e " ${green}${bold}DONE${normal}"
+    elif [[ -f /tmp/$LockName.2.lock ]]; then
+        echo -e " ${red}${bold}FAILED${normal}"
+    else
+        echo -e " ${red}${bold}Unknown State${normal}"
+    fi
+}
+
+
+# These codes are from QuickBox
 function spinner() {
     local pid=$1
     local delay=0.25
@@ -78,24 +90,79 @@ function spinner() {
     printf "    \b\b\b\b"
 }
 
+
 # These codes are from rtinst and QuickBox
 function apt_install() {
-[[ -z $output ]] && echo "ERROR: No output" && exit 1
-arg=("$@")
-packages=("${arg[@]:1}")
-[[ -z "$packages" ]] && echo "ERROR: No packages" && exit 1
-for package_name in "${packages[@]}" ; do
-    if [ $(apt-cache show -q=0 $package_name 2>&1 | grep -c "No packages found") -eq 0 ]; then
-        if [ $(dpkg-query -W -f='${Status}' $package_name 2>/dev/null | grep -c "ok installed") -eq 0 ]; then
-            install_list="$install_list $package_name"
+    [[ -z "$OutputLOG" ]] && echo "ERROR: No output" && exit 1
+    arg=("$@")
+    packages=("${arg[@]:1}")
+    [[ -z "$packages" ]] && echo "ERROR: No packages" && exit 1
+    for package_name in "${packages[@]}" ; do
+        if [ $(apt-cache show -q=0 $package_name 2>&1 | grep -c "No packages found") -eq 0 ]; then
+            if [ $(dpkg-query -W -f='${Status}' $package_name 2>/dev/null | grep -c "ok installed") -eq 0 ]; then
+                install_list="$install_list $package_name"
+            fi
+        else
+            echo "$package_name not found, skipping" 2>&1 | tee -a "$OutputLOG"
         fi
-    else
-        echo "$package_name not found, skipping" >> $output 2>&1
+    done
+    test -z "$install_list" || apt-get -y install $install_list >> "$OutputLOG" 2>&1
+    if [ ! $? = 0 ]; then
+        echo -e "ERROR: Failed to install packages" 2>&1 | tee -a "$OutputLOG"
+        exit 1
     fi
-done
-test -z "$install_list" || apt-get -y install $install_list >> $output 2>&1
-if [ ! $? = 0 ]; then
-    echo -e "ERROR: Failed to install packages"
-    exit 1
-fi
 }
+
+function apt_install_separate() {
+    [[ -z "$OutputLOG" ]] && echo "ERROR: No output" && exit 1
+    arg=("$@")
+    packages=("${arg[@]:1}")
+    [[ -z "$packages" ]] && echo "ERROR: No packages" && exit 1
+    for package_name in "${packages[@]}" ; do
+        if [ $(apt-cache show -q=0 $package_name 2>&1 | grep -c "No packages found") -eq 0 ]; then
+            if [ $(dpkg-query -W -f='${Status}' $package_name 2>/dev/null | grep -c "ok installed") -eq 0 ]; then
+                apt-get -y install $install_list >> "$OutputLOG" 2>&1  ||
+                echo -e "ERROR: Failed to install $package_name" 2>&1 | tee -a "$OutputLOG"
+            fi
+        else
+            echo "$package_name not found, skipping" 2>&1 | tee -a "$OutputLOG"
+        fi
+    done
+}
+
+
+# These codes are from rtinst
+# (Check if a web site is reachable)
+function check_url() {
+    if [[ `wget -S --spider $1 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then return 0 ; else return 1 ; fi
+}
+
+
+function set_variables_log_location() {
+    LogRootPath=/log/inexistence
+    LOCKLocation=$LogRootPath/lock
+
+    if [[ -z $LogTimes ]]; then
+        LogTimes=$LogRootPath/single
+        OutputLOG=$LogTimes/log/$pm_action.$AppNameLower.txt
+    elif [[ $LogTimes == none ]]; then
+        LogTimes=/tmp/ttmmpp
+        OutputLOG="/dev/null"
+    fi
+
+    if [[ $pm_action != uninstall ]]; then
+        [[ $Need_SourceCode == yes ]] && SCLocation=$LogTimes/source
+        DebLocation=$LogRootPath/deb
+    fi
+
+    mkdir -p $LogRootPath $LogTimes $DebLocation $SCLocation $LOCKLocation $(dirname $OutputLOG)
+    echo "\n\n\n$(date "+%Y.%m.%d.%H.%M.%S") $AppName\n\n\n" >> $OutputLOG
+
+    if [[ -n $SCLocation ]] && [[ $pm_action != uninstall ]]; then
+        cd $SCLocation
+    else
+        cd /tmp
+    fi
+}
+
+
