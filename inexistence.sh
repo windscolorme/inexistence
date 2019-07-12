@@ -16,8 +16,8 @@ export PATH
 SYSTEMCHECK=1
 DeBUG=0
 script_lang=eng
-INEXISTENCEVER=1.1.2.20
-INEXISTENCEDATE=2019.07.10
+INEXISTENCEVER=1.1.3.0
+INEXISTENCEDATE=2019.07.12
 default_branch=master
 # --------------------------------------------------------------------------------
 
@@ -725,8 +725,8 @@ while [[ -z $qb_version ]]; do
     [[ $qb_installed == Yes ]] &&
     echo -e "${bailanse}${bold} ATTENTION ${normal} ${blue}${bold}$lang_yizhuang ${underline}qBittorrent ${qbtnox_ver}${normal}"
 
-    read -ep "${bold}${yellow}$which_version_do_you_want${normal} (Default ${cyan}07${normal}): " version
-  # echo -ne "${bold}${yellow}$which_version_do_you_want${normal} (Default ${cyan}07${normal}): " ; read -e version
+    read -ep "${bold}${yellow}$which_version_do_you_want${normal} (Default ${cyan}05${normal}): " version
+  # echo -ne "${bold}${yellow}$which_version_do_you_want${normal} (Default ${cyan}05${normal}): " ; read -e version
 
     case $version in
         01 | 1) qb_version=3.3.11 ;;
@@ -1922,12 +1922,6 @@ fi ; }
 
 
 
-# 设置 qBittorrent#
-function config_qbittorrent() {
-bash $local_packages/package/qbittorrent/configure -u $iUser -p $iPass -w 2017 -i 9002 --logbase $LogTimes
-}
-
-
 
 # 安装 Deluge
 function install_deluge() {
@@ -2241,18 +2235,6 @@ function install_flexget() {
 
 
 
-
-# --------------------- 安装 rclone --------------------- #
-
-function install_rclone() {
-bash $local_packages/package/rclone/install --logbase $LogTimes
-}
-
-
-
-
-
-
 # --------------------- 安装 BBR --------------------- #
 
 function install_bbr() {
@@ -2379,66 +2361,6 @@ apt-get -y install x2goserver x2goserver-xsession pulseaudio
 touch $LockLocation/x2go.lock
 
 echo -e "\n\n\n${bailvse}  X2GO-INSTALLATION-COMPLETED  ${normal}\n\n" ; }
-
-
-
-
-
-# --------------------- 安装 wine 与 mono --------------------- #
-
-function install_wine() {
-
-# mono
-# http://www.mono-project.com/download/stable/#download-lin
-# https://download.mono-project.com/sources/mono/
-# http://www.mono-project.com/docs/compiling-mono/compiling-from-git/
-
-# These codes are from https://github.com/liaralabs/swizzin/blob/master/sources/functions/mono
-if [[ $DISTROL == ubuntu ]]; then
-    apt-key --keyring /etc/apt/trusted.gpg.d/mono-xamarin.gpg adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-elif [[ $CODENAME == jessie ]]; then
-    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-    wget -O libjpeg8.deb http://ftp.fr.debian.org/debian/pool/main/libj/libjpeg8/libjpeg8_8d-1+deb7u1_amd64.deb
-    dpkg -i libjpeg8.deb
-    rm -rf libjpeg8.deb
-elif [[ $CODENAME == stretch ]]; then
-    apt-key --keyring /etc/apt/trusted.gpg.d/mono-xamarin.gpg adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-fi
-
-[[ $CODENAME != buster ]] && 
-echo "deb https://download.mono-project.com/repo/$DISTROL $CODENAME/snapshots/5.18/. main" > /etc/apt/sources.list.d/mono.list
-# echo "deb http://download.mono-project.com/repo/$DISTROL stable-$CODENAME main" > /etc/apt/sources.list.d/mono.list
-
-apt-get update
-apt-get install -y mono-complete ca-certificates-mono
-
-echo -e "\n\n\n${bailanse}  MONO-INSTALLATION-COMPLETED  ${normal}\n\n"
-
-# wine
-# https://wiki.winehq.org/Debian
-
-dpkg --add-architecture i386
-wget -qO- https://dl.winehq.org/wine-builds/Release.key | apt-key add -
-apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 76F1A20FF987672F
-
-if [[ $DISTRO == Ubuntu ]]; then
-    apt-add-repository -y https://dl.winehq.org/wine-builds/ubuntu/
-elif [[ $DISTRO == Debian ]]; then
-    echo "deb https://dl.winehq.org/wine-builds/$DISTROL/ $CODENAME main" > /etc/apt/sources.list.d/wine.list
-fi
-
-apt-get update
-apt-get install -y winehq-stable # --install-recommends
-
-wget -nv -N https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks -O /usr/local/bin/winetricks
-chmod 755 /usr/local/bin/winetricks
-
-touch $LockLocation/winemono.lock
-
-echo -e "\n\n\n${bailvse}Version${normal}"
-echo "${bold}${green}`wine --version`"
-echo "mono `mono --version 2>&1 | head -n1 | awk '{print $5}'`${normal}"
-echo -e "\n\n\n${bailanse}  WINE-INSTALLATION-COMPLETED  ${normal}\n\n" ; }
 
 
 
@@ -2702,7 +2624,7 @@ mv /etc/00.preparation.log $LogLocation/00.preparation.log
 
 [[ $qb_version != No ]] && {
 echo -ne "Installing qBittorrent ... \n\n\n" ; install_qbittorrent 2>&1 | tee $LogLocation/05.qb1.log
-config_qbittorrent ; }
+bash $local_packages/package/qbittorrent/configure -u $iUser -p $iPass -w 2017 -i 9002 --logbase $LogTimes ; }
 
 [[ $de_version != No ]] && {
 echo -ne "Installing Deluge ... \n\n\n" ; install_deluge 2>&1 | tee $LogLocation/03.de1.log
@@ -2717,10 +2639,11 @@ echo -ne "Installing Transmission ... \n\n\n" ; install_transmission 2>&1 | tee 
 echo -ne "Configuring Transmission ... " ; config_transmission 2>&1 | tee $LogLocation/09.tr2.log ; }
 
 [[ $InsFlex   == Yes ]]  && { echo -ne "Installing Flexget ... \n\n\n" ; install_flexget 2>&1 | tee $LogLocation/10.flexget.log ; }
-[[ $InsRclone == Yes ]]  && { install_rclone 2>&1 | tee $LogLocation/11.rclone.log ; }
+[[ $InsRclone == Yes ]]  && { bash $local_packages/package/rclone/install --logbase $LogTimes ; }
 [[ $InsRDP    == VNC ]]  && { echo -ne "Installing VNC ... \n\n\n" ; install_vnc 2>&1 | tee $LogLocation/12.rdp.log ; }
 [[ $InsRDP    == X2Go ]] && { echo -ne "Installing X2Go ... \n\n\n" ; install_x2go 2>&1 | tee $LogLocation/12.rdp.log ; }
-[[ $InsWine   == Yes ]]  && { echo -ne "Installing Wine ... \n\n\n" ; install_wine 2>&1 | tee $LogLocation/12.wine.log ; }
+[[ $InsWine   == Yes ]]  && { bash $local_packages/package/wine/install --logbase $LogTimes
+                              bash $local_packages/package/mono/install --logbase $LogTimes ; }
 [[ $InsTools  == Yes ]]  && { echo -ne "Installing Uploading Toolbox ... \n\n\n" ; install_tools 2>&1 | tee $LogLocation/13.tool.log ; }
 [[ $UseTweaks == Yes ]]  && { echo -ne "Configuring system settings ... \n\n\n" ; system_tweaks ; }
 
