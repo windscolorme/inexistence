@@ -39,7 +39,7 @@ bash <(wget --no-check-certificate -qO- https://github.com/Aniverse/inexistence/
 ![安装时的选项](https://github.com/Aniverse/inexistence/raw/master/03.Files/images/inexistence.04.png)
 
 1. ***是否升级系统***  
-如果你的系统是 `Debian 7` 或 `Ubuntu 14.04`，你可以用本脚本来升级到 `Debian 8／9` 或 `Ubuntu 16.04／18.04`  
+如果你的系统是 `Debian 7` 或 `Ubuntu 14.04`，你可以用本脚本来升级到 `Debian 8／9／10` 或 `Ubuntu 16.04／18.04`  
 理论上整个升级过程应该是无交互的，应该不会碰到什么问你 Yes or No 的问题  
 升级完后会直接执行重启命令，重启完后你需要再次运行脚本来完成软件的安装  
 
@@ -53,8 +53,7 @@ bash <(wget --no-check-certificate -qO- https://github.com/Aniverse/inexistence/
 
 3. ***系统源***  
 **`--apt-yes`**、**`--apt-no`**  
-**目前默认直接换源不再提问，如果不想换源，请在运行脚本的使用 `--apt-no` 参数**  
-其实大多数情况下无需换源；但某些盒子默认的源可能有点问题，所以我干脆做成默认都换源了  
+其实大多数情况下无需换源；但某些盒子默认的源可能有点问题，所以还是留了这么一个选项  
 
 
 4. ***线程数量***  
@@ -87,7 +86,7 @@ bash <(wget --no-check-certificate -qO- https://github.com/Aniverse/inexistence/
 
 
 8. ***Deluge***  
-**`--de '1.3.15 (Skip hash check)'`**、**`--de 1.3.9`**、**`--de repo`**、**`--de No`**  
+**`--de 1.3.9`**、**`--de repo`**、**`--de No`**  
 1.3.9 这个古董版本主要针对那些不支持新版本 Deluge 的站点，比如 HD4FANS  
 默认选项为从源码安装 1.3.15  
 此外还会安装一些实用的 Deluge 第三方插件：  
@@ -223,33 +222,11 @@ VNC 目前在 Debian 下安装完后可能会无法连接，建议 Debian 系统
 
 
 
-## mingling
-
-方便刷子们使用的一个脚本，有很多功能如果你没安装 `inexistence` 的话是用不了的  
-有些功能还没做完，不过这个脚本我有点放弃治疗了，无限期弃更，说真的这个东西我自己都懒得用  
-不做具体的介绍了，直接看图吧  
-
-![mingling.00](https://github.com/Aniverse/inexistence/raw/master/03.Files/images/mingling.00.png)
-![mingling.01](https://github.com/Aniverse/inexistence/raw/master/03.Files/images/mingling.01.png)
-![mingling.02](https://github.com/Aniverse/inexistence/raw/master/03.Files/images/mingling.02.png)
-![mingling.03](https://github.com/Aniverse/inexistence/raw/master/03.Files/images/mingling.03.png)
-![mingling.04](https://github.com/Aniverse/inexistence/raw/master/03.Files/images/mingling.04.png)
-![mingling.05](https://github.com/Aniverse/inexistence/raw/master/03.Files/images/mingling.05.png)
-![mingling.06](https://github.com/Aniverse/inexistence/raw/master/03.Files/images/mingling.06.png)
-![mingling.07](https://github.com/Aniverse/inexistence/raw/master/03.Files/images/mingling.07.png)
-![mingling.08](https://github.com/Aniverse/inexistence/raw/master/03.Files/images/mingling.08.png)
-
-
-
-
-
-
-
-
 ## BDinfo
 
 这个是单独抽出来的，用于给 BDMV 扫描 BDinfo 的脚本  
 运行完以后可以直接在 SSH 上输出 BDinfo Quick Summary  
+注意：`bdinfo` 脚本不支持 UHD Blu-ray，如需扫描 4K BD 请使用 `bluray`  
 
 ![bdinfo输出结果](https://github.com/Aniverse/filesss/raw/master/Images/bdinfo.01.png)
 
@@ -261,10 +238,6 @@ VNC 目前在 Debian 下安装完后可能会无法连接，建议 Debian 系统
 
 ![bdinfo输出结果](https://github.com/Aniverse/filesss/raw/master/Images/bdinfo.03.png)
  
-
-
-
-
 
 
 ## IPv6
@@ -292,33 +265,6 @@ bash ipv6 2001:cb6:2521:240:: 57 00:03:00:01:d3:3a:15:b4:43:ad
 
 
 
-
-
-
-
-
-## xiansu
-
-**2019.06.05 作者吐槽：这玩意儿有点时泪了的感觉，现在都是 OP 和 Hz，辣鸡 Online，限速涨价， 呸！**  
-用于给盒子限制全局上传速度的脚本，适用于保证带宽有限的盒子，比如 Online.net 的一些独服  
-更改限速速率时无需事先解除限速，脚本执行新的限速前会自动解除该网卡已经存在的限速  
-直接输入 `xiansu eth0 300` 的话会直接限速，不会有任何提示，适合用于需要开机自启的情况  
-
-``` 
-xiansu  
-xiansu [interface] [uploadspeed,Mbps]
-xiansu eth0 300
-```
-
-![xiansu.01](https://github.com/Aniverse/filesss/raw/master/Images/xiansu.01.png)
-
-
-
-
-
-
-
-
 ## jietu
 
 用于截图和生成 mediainfo 的脚本，对于 DVD 还会加入 IFO 文件的 mediainfo，PTP 发种实用  
@@ -334,11 +280,6 @@ jietu "/home/aniverse/deluge/download/Your Name (2016) PAL DVD9"
 ```
 
 ![jietu.01](https://github.com/Aniverse/filesss/raw/master/Images/jietu.01.png)
-
-
-
-
-
 
 
 
@@ -358,10 +299,6 @@ jietu "/home/aniverse/deluge/download/Your Name (2016) PAL DVD9"
 
 
 
-
-
-
-
 ## jiegua
 
 解除挂载用的脚本，会把能检测到的所有已挂载的 ISO 全部解除挂载
@@ -369,11 +306,6 @@ jietu "/home/aniverse/deluge/download/Your Name (2016) PAL DVD9"
 ![jiegua.01](https://github.com/Aniverse/filesss/raw/master/Images/jiegua.01.png)
 
 `guazai` + `jietu` + `jiegua` 三连
-
-
-
-
-
 
 
 
