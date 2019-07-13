@@ -5,8 +5,8 @@
 #
 # Thanks to amefs
 
-script_update=2019.07.13
-script_version=r10000
+script_update=2019.07.14
+script_version=r10001
 
 ################################################################################################ Debug
 
@@ -175,14 +175,17 @@ After=network.target
 [Service]
 Type=simple
 User=%I
-#Group=%I
 UMask=000
-#WorkingDirectory=/home/%i/.config/flexget/
+PIDFile=/run/flexget.pid
 ExecStart=$flexget_cmd -c /home/%i/.config/flexget/config.yml daemon start
 ExecStartPre=/bin/rm -f /home/%i/.config/flexget/.config-lock
-ExecStop=$flexget_cmd -c /home/%i/.config/flexget/config.yml daemon stop
+ExecStop=/bin/kill -9 $(cat /run/flexget.pid)
 ExecReload=$flexget_cmd -c /home/%i/.config/flexget/config.yml daemon reload
+
+#Group=%I
+#WorkingDirectory=/home/%i/.config/flexget/
 #Restart=on-failure
+#ExecStop=$flexget_cmd -c /home/%i/.config/flexget/config.yml daemon stop
 
 [Install]
 WantedBy=multi-user.target

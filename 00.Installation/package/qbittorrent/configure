@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 #
-script_update=2019.07.13
-script_version=r11010
+script_update=2019.07.14
+script_version=r11011
 
 ################################################################################################ Debug
 
@@ -79,9 +79,11 @@ After=network.target
 #UMask=000
 Type=forking
 User=%I
+PIDFile=/run/qbittorrent-nox-%I.pid
 LimitNOFILE=infinity
 ExecStart=/usr/bin/qbittorrent-nox -d
 #ExecStop=/usr/bin/killall -w -s 9 /usr/bin/qbittorrent-nox
+ExecStop=/bin/kill -9 $(cat /run/qbittorrent-nox-%I.pid)
 Restart=on-failure
 TimeoutSec=300
 
