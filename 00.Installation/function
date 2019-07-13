@@ -4,7 +4,7 @@
 # Author: Aniverse
 #
 script_update=2019.07.13
-script_version=r10022
+script_version=r10023
 ################################################################################################ Usage Guide
 
 usage_guide() {
@@ -105,8 +105,7 @@ function spinner() {
 # These codes are from rtinst and QuickBox
 function apt_install() {
     [[ -z "$OutputLOG" ]] && echo "ERROR: No output" && exit 1
-    arg=("$@")
-    packages=("${arg[@]:1}")
+    packages=("$@")  # arg=("$@") packages=("${arg[@]:1}")
     [[ -z "$packages" ]] && echo "ERROR: No packages" && exit 1
     for package_name in "${packages[@]}" ; do
         if [ $(apt-cache show -q=0 $package_name 2>&1 | grep -c "No packages found") -eq 0 ]; then
@@ -127,13 +126,13 @@ function apt_install() {
 
 function apt_install_separate() {
     [[ -z "$OutputLOG" ]] && echo "ERROR: No output" && exit 1
-    arg=("$@")
+    packages=("$@")  # arg=("$@") packages=("${arg[@]:1}")
     packages=("${arg[@]:1}")
     [[ -z "$packages" ]] && echo "ERROR: No packages" && exit 1
     for package_name in "${packages[@]}" ; do
         if [ $(apt-cache show -q=0 $package_name 2>&1 | grep -c "No packages found") -eq 0 ]; then
             if [ $(dpkg-query -W -f='${Status}' $package_name 2>/dev/null | grep -c "ok installed") -eq 0 ]; then
-                apt-get -y install $install_list >> "$OutputLOG" 2>&1  ||
+                apt-get -y install $package_name >> "$OutputLOG" 2>&1  ||
                 echo -e "ERROR: Failed to install $package_name" 2>&1 | tee -a "$OutputLOG"
             fi
         else
