@@ -4,11 +4,14 @@
 # Author: Aniverse
 #
 script_update=2019.07.13
-script_version=r11009
+script_version=r11010
 
 ################################################################################################ Debug
 
 usage_for_debug() {
+    export local_packages=/etc/inexistence/00.Installation
+    export s=$local_packages/package/qbittorrent/configure
+    rm -f $s ; nano $s
     bash /etc/inexistence/00.Installation/package/qbittorrent/configure -u $iUser -p $iPass -w 2017 -i 9002
 }
 ################################################################################################ Get options

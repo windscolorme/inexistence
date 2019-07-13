@@ -4,13 +4,13 @@
 # Author: Aniverse
 
 script_update=2019.07.13
-script_version=r10000
+script_version=r10001
 
 ################################################################################################ Debug
 
 usage_for_debug() {
     export local_packages=/etc/inexistence/00.Installation
-    export s=$local_packages/package/libtorrent-rasterbar/install
+    export s=$local_packages/package/qbittorrent/install
     rm -f $s ; nano $s
     bash $s -m apt        --logbase $LogTimes
 }
@@ -59,6 +59,7 @@ else
 fi
 
 set_variables_log_location
+[[ $debug == 1 ]] && debug_log_location
 
 git_repo="https://github.com/qbittorrent/qBittorrent"
 lt_version=$(pkg-config --exists --print-errors "libtorrent-rasterbar >= 3.0.0" 2>&1 | awk '{print $NF}' | grep -oE [0-9.]+)
@@ -143,6 +144,7 @@ function install_qbittorrent_dependencies() {
 
 function compile_qbittorrent() {
     echo >> $OutputLOG
+    rm -rf qBittorrent-$version
     git clone https://github.com/qbittorrent/qBittorrent qBittorrent-$version >> $OutputLOG 2>&1
     cd qBittorrent-$version
 
@@ -162,7 +164,7 @@ function compile_qbittorrent() {
         git config --global user.name "Your Name" >> $OutputLOG 2>&1
         git cherry-pick 262c3a7 >> $OutputLOG 2>&1
     else
-        git checkout release-$qb_version >> $OutputLOG 2>&1
+        git checkout release-$version >> $OutputLOG 2>&1
     fi
 
     ./configure --prefix=/usr $compile_flag >> $OutputLOG 2>&1
@@ -188,9 +190,9 @@ function compile_qbittorrent() {
 
 
 function check_status_qbt() {
-    qb_installed_ver=$($package_name --version 2>&1 | awk '{print $2}' | sed "s/v//")
+    qb_installed_ver=$(eval $package_name --version 2>&1 | awk '{print $2}' | grep -oE "[0-9.]+")
     if [[ -z $qb_installed_ver ]]; then
-        echo -e " ${red}${bold}FAILED: No qBittorrent installed${normal}"
+        echo -e " ${red}${bold}FAILED${normal}"
     elif [[ $qb_installed_ver == $version ]]; then
         echo -e " ${green}${bold}DONE${normal}"
         touch $LOCKLocation/$AppNameLower{,.source}.lock
@@ -203,21 +205,22 @@ function check_status_qbt() {
 ################################################################################################ Main
 
 
-if dpkg -l | grep $AppName -q ; then
-    echo "Uninstalling old qBittorrent ..." | tee -a $OutputLOG
+if dpkg -l | grep $AppNameLower -q ; then
+    echo -ne "Uninstalling old qBittorrent ... " | tee -a $OutputLOG
     apt-get purge -y qbittorrent-nox >> $OutputLOG 2>&1
     dpkg -r qbittorrent-nox >> $OutputLOG 2>&1
     apt-get autoremove -y >> $OutputLOG 2>&1
+    echo -e "${green}${bold}DONE${normal}" | tee -a $OutputLOG
 fi
 
 
 case $mode in
-    apt     ) echo -ne "Installing $AppName ${bold}${cyan}$version${normal} from $CODENAME repo ..." | tee -a $OutputLOG
+    apt     ) echo -ne "Installing $AppName from $CODENAME repo ..." | tee -a $OutputLOG
               install_qbittorrent_apt & spinner $!
               check_status | tee -a $OutputLOG
               ;;
 
-    ppa    )  echo -ne "Installing $AppName ${bold}${cyan}$version${normal} from stable ppa ..." | tee -a $OutputLOG
+    ppa    )  echo -ne "Installing $AppName from stable ppa ..." | tee -a $OutputLOG
               install_qbittorrent_ppa & spinner $!
               check_status | tee -a $OutputLOG
               ;;
