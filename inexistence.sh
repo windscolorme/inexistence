@@ -16,7 +16,7 @@ export PATH
 SYSTEMCHECK=1
 DeBUG=0
 script_lang=eng
-INEXISTENCEVER=1.1.3.2
+INEXISTENCEVER=1.1.3.3
 INEXISTENCEDATE=2019.07.13
 default_branch=master
 # --------------------------------------------------------------------------------
@@ -1726,8 +1726,8 @@ bash $local_packages/alias $iUser $wangka $LogTimes $IntoBashrc
 
 # 脚本设置
 mkdir -p ${local_repo_base}/00.Installation
-mkdir -p ${local_repo_base}/01.Log
-mkdir -p ${local_repo_base}/02.Tools/eac3to
+mkdir -p ${local_repo_base}/01.Log             # 等着扔了
+mkdir -p ${local_repo_base}/02.Tools/eac3to    # 以后扔到 /box 之类的目录里去
 mkdir -p ${local_repo_base}/03.Files
 mkdir -p ${local_repo_base}/04.Upload
 mkdir -p ${local_repo_base}/05.Output
@@ -1735,9 +1735,6 @@ mkdir -p ${local_repo_base}/06.BluRay
 mkdir -p ${local_repo_base}/07.Screenshots
 mkdir -p ${local_repo_base}/08.BDinfo
 mkdir -p ${local_repo_base}/09.Torrents
-mkdir -p ${local_repo_base}/10.Demux
-mkdir -p ${local_repo_base}/11.Remux
-mkdir -p ${local_repo_base}/12.Output2
 
 ln -s ${local_repo_base} $WebROOT/h5ai/inexistence
 cp -f ${local_repo_base}/00.Installation/script/* /usr/local/bin
@@ -1809,116 +1806,6 @@ init 6
 sleep 5
 kill -s TERM $TOP_PID
 exit 0 ; }
-
-
-
-
-
-# --------------------- 安装 libtorrent-rasterbar --------------------- #
-
-function install_libtorrent_rasterbar() {
-
-[[ $DeBUG == 1 ]] && {
-echo "Deluge_2_later=$Deluge_2_later   qBittorrent_4_2_0_later=$qBittorrent_4_2_0_later
-lt_ver=$lt_ver  lt8_support=$lt8_support  lt_ver_qb3_ok=$lt_ver_qb3_ok  lt_ver_de2_ok=$lt_ver_de2_ok
-lt_version=$lt_version" ; }
-
-if [[ $arch == x86_64 ]]; then
-
-if   [[ $lt_version == RC_1_0 ]]; then
-    bash $local_packages/package/libtorrent-rasterbar/install -m deb
-elif [[ $lt_version == RC_1_1 ]]; then
-    if [[ $CODENAME == buster ]]; then
-        bash $local_packages/package/libtorrent-rasterbar/install -b RC_1_1
-    else
-        bash $local_packages/package/libtorrent-rasterbar/install -m deb2
-    fi
-elif [[ $lt_version == RC_1_2 ]]; then
-  # bash $local_packages/package/libtorrent-rasterbar/install -m deb3
-    bash $local_packages/package/libtorrent-rasterbar/install -b RC_1_2
-else
-    bash $local_packages/package/libtorrent-rasterbar/install -v $lt_version
-fi
-
-fi ; }
-
-
-
-
-
-
-# --------------------- 安装 qBittorrent --------------------- #
-
-function install_qbittorrent() {
-
-if [[ $qb_version == "Install from repo" ]]; then
-    apt-get install -y qbittorrent-nox
-elif [[ $qb_version == "Install from PPA" ]]; then
-    add-apt-repository -y ppa:qbittorrent-team/qbittorrent-stable
-    apt-get update
-    apt-get install -y qbittorrent-nox
-else
-    cd $SourceLocation
-    dpkg -l | grep qbittorrent-nox -q && dpkg -r qbittorrent-nox
-    if [[ $CODENAME == jessie ]]; then
-        apt-get purge -y qtbase5-dev qttools5-dev-tools libqt5svg5-dev
-        apt-get autoremove -y
-        apt-get install -y libgl1-mesa-dev
-        wget -nv ${repo}/raw/files/debian.package/qt.5.5.1.jessie.amd64.deb -O qt.5.5.1.jessie.amd64.deb
-        dpkg -i qt.5.5.1.jessie.amd64.deb && rm -f qt.5.5.1.jessie.amd64.deb
-        export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/Qt-5.5.1/lib/pkgconfig
-        export PATH=/usr/local/Qt-5.5.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-        qmake --version
-    else
-        apt-get install -y qtbase5-dev qttools5-dev-tools libqt5svg5-dev
-    fi
-
-    qb_version=`echo $qb_version | grep -oE [0-9.]+`
-    git clone https://github.com/qbittorrent/qBittorrent qBittorrent-$qb_version
-    cd qBittorrent-$qb_version
-
-    if [[ $qb_version == 4.2.0 ]]; then
-        git checkout master
-    elif [[ $qb_version == 3.3.17 ]]; then
-        git checkout release-3.3.11
-        git config --global user.email "you@example.com"
-        git config --global user.name "Your Name"
-        git cherry-pick db3158c
-        git cherry-pick b271fa9
-    elif [[ $qb_version == 4.1.2 ]]; then
-        git checkout release-$qb_version
-        git config --global user.email "you@example.com"
-        git config --global user.name "Your Name"
-        git cherry-pick 262c3a7
-    else
-        git checkout release-$qb_version
-    fi
-
-    # 这个私货是修改 qBittorrent WebUI 里各个标签的默认排序以及宽度，符合我个人的习惯
-    [[ $sihuo == yes ]] && {
-    wget -nv ${repo}/raw/files/miscellaneous/qbt.4.1.6.webui.table.patch
-    patch -p1 < qbt.4.1.6.webui.table.patch ; }
-
-    ./configure --prefix=/usr --disable-gui
-    make -j$MAXCPUS
-    mkdir -p doc-pak
-    echo "qBittorrent BitTorrent client headless (qbittorrent-nox)" > description-pak
-
-    if [[ $qb_installed == Yes ]]; then
-        make install
-    else
-        if [[ $CODENAME == buster ]]; then
-            make install
-        else
-            checkinstall -y --pkgname=qbittorrent-nox --pkgversion=$qb_version --pkggroup qbittorrent
-            mv -f qbittorrent*deb $DebLocation
-        fi
-    fi
-
-    cd
-    echo -e "\n\n${bailvse}  QBITTORRENT-INSTALLATION-COMPLETED  ${normal}\n\n"
-
-fi ; }
 
 
 
@@ -2008,7 +1895,7 @@ mkdir -p /root/.config
 cp -rf ${local_repo_base}/00.Installation/template/config/deluge /root/.config/deluge
 chmod -R 755 /root/.config
 
-cat > /tmp/deluge.userpass.py <<EOF
+cat << EOF > /tmp/deluge.userpass.py
 #!/usr/bin/env python
 import hashlib
 import sys
@@ -2056,11 +1943,12 @@ sed -i "s/make\ \-s\ \-j\$(nproc)/make\ \-s\ \-j${MAXCPUS}/g" /usr/local/bin/rtu
 if [[ $rt_installed == Yes ]]; then
     rtupdate $IPv6Opt $rt_versionIns
 else
-    rtinst --ssh-default --ftp-default --rutorrent-master --force-yes --log $IPv6Opt -v $rt_versionIns -u $iUser -p $iPass -w $iPass
+    rtinst --ssh-default --ftp-default --rutorrent-master --force-yes --log \
+           $IPv6Opt -v $rt_versionIns -u $iUser -p $iPass -w $iPass
 fi
 
-mv /root/rtinst.log $LogLocation/07.rtinst.script.log
-mv /home/$iUser/rtinst.info $LogLocation/07.rtinst.info.txt
+mv   /root/rtinst.log           $LogLocation/07.rtinst.script.log
+mv   /home/$iUser/rtinst.info   $LogLocation/07.rtinst.info.txt
 ln -s /home/${iUser} $WebROOT/h5ai/$iUser/user.root
 touch $LockLocation/rtorrent.lock
 cd ; echo -e "\n\n\n\n${baihongse}  RT-INSTALLATION-COMPLETED  ${normal}\n\n\n" ; }
@@ -2444,7 +2332,6 @@ touch $LockLocation/tweaks.lock ; }
 # --------------------- 结尾 --------------------- #
 
 function end_pre() {
-
 [[ $USESWAP == Yes ]] && swap_off
 _check_install_2
 unset INSFAILED QBFAILED TRFAILED DEFAILED RTFAILED FDFAILED FXFAILED
@@ -2453,17 +2340,9 @@ RTWEB="/rutorrent" ; TRWEB=":9099" ; DEWEB=":8112" ; QBWEB=":2017"
 FXWEB=":6566" ; FDWEB=":3000"
 
 if [[ `  ps -ef | grep deluged | grep -v grep ` ]] && [[ `  ps -ef | grep deluge-web | grep -v grep ` ]] ; then destatus="${green}Running ${normal}" ; else destatus="${red}Inactive${normal}" ; fi
-
-# systemctl is-active flexget 其实不准，flexget daemon status 输出结果太多种……
-# [[ $(systemctl is-active flexget) == active ]] && flexget_status="${green}Running ${normal}" || flexget_status="${red}Inactive${normal}"
-
-flexget daemon status >> /tmp/flexgetpid.log 2>&1 # 这个速度慢了点但应该最靠谱
-[[ `grep PID /tmp/flexgetpid.log` ]] && flexget_status="${green}Running  ${normal}" || flexget_status="${red}Inactive ${normal}"
-[[ -e $LockLocation/flexget.pass.lock ]] && flexget_status="${bold}${bailanse}CheckPass${normal}"
-[[ -e $LockLocation/flexget.conf.lock ]] && flexget_status="${bold}${bailanse}CheckConf${normal}"
 Installation_FAILED="${bold}${baihongse} ERROR ${normal}"
-
 clear ; }
+
 
 function script_end() {
 echo -e " ${baiqingse}${bold}      INSTALLATION COMPLETED      ${normal} \n"
@@ -2523,31 +2402,24 @@ fi
 echo
 echo -e " ${cyan}Your Username${normal}       ${bold}${iUser}${normal}"
 echo -e " ${cyan}Your Password${normal}       ${bold}${iPass}${normal}"
-[[ $InsFlex != No ]] && [[ $flex_installed == Yes ]] &&
-echo -e " ${cyan}Flexget Login${normal}       ${bold}flexget${normal}"
 [[ $InsRDP == VNC ]] && [[ $CODENAME == xenial ]] &&
 echo -e " ${cyan}VNC  Password${normal}       ${bold}` echo ${iPass} | cut -c1-8` ${normal}"
-[[ -e $LockLocation/flexget.pass.lock ]] &&
-echo -e "\n ${bold}${bailanse} Naive! ${normal} You need to set Flexget WebUI password by typing \n          ${bold}flexget web passwd <new password>${normal}"
-[[ -e $LockLocation/flexget.conf.lock ]] &&
-echo -e "\n ${bold}${bailanse} Naive! ${normal} You need to check your Flexget config file\n          maybe your password is too young too simple?${normal}"
 
 echo '---------------------------------------------------------------------------------'
 echo
 
-timeWORK=installation
-_time
+timeWORK=installation ; _time
 
 [[ -n $INSFAILED ]] && {
 echo -e "\n ${bold}Unfortunately something went wrong during installation.
  You can check logs by typing these commands:
  ${yellow}cat $LogTimes/installed.log"
-[[ -n $QBFAILED ]] && echo -e " cat $LogLocation/05.qb1.log" #&& echo "QBLTCFail=$QBLTCFail   QBCFail=$QBCFail"
-[[ -n $DEFAILED ]] && echo -e " cat $LogLocation/03.de1.log" #&& echo "DELTCFail=$DELTCFail"
+[[ -n $QBFAILED ]] && echo -e " cat $LogLocation/install.{qbittorrent,libtorrent-rasterbar}.txt"
+[[ -n $DEFAILED ]] && echo -e " cat $LogLocation/03.de1.log"
 [[ -n $TRFAILED ]] && echo -e " cat $LogLocation/08.tr1.log"
 [[ -n $RTFAILED ]] && echo -e " cat $LogLocation/07.rt.log\n cat $LogLocation/07.rtinst.script.log"
 [[ -n $FDFAILED ]] && echo -e " cat $LogLocation/07.flood.log"
-[[ -n $FXFAILED ]] && echo -e " cat $LogLocation/10.flexget.log"
+[[ -n $FXFAILED ]] && echo -e " cat $LogLocation/{install,configure}.flexget.txt"
 echo -ne "${normal}" ; }
 
 echo ; }
@@ -2586,15 +2458,42 @@ mv /etc/00.preparation.log $LogLocation/00.preparation.log
 ######################################################################################################
 
 [[ $InsBBR == Yes || $InsBBR == To\ be\ enabled ]] && { echo -ne "Configuring BBR ... \n\n\n" ; install_bbr 2>&1 | tee $LogLocation/02.bbr.log ; }
-[[ -n $lt_version ]] && [[ $lt_version != system ]] && install_libtorrent_rasterbar
 
-[[ $qb_version != No ]] && {
-echo -ne "Installing qBittorrent ... \n\n\n" ; install_qbittorrent 2>&1 | tee $LogLocation/05.qb1.log
-bash $local_packages/package/qbittorrent/configure -u $iUser -p $iPass -w 2017 -i 9002 --logbase $LogTimes ; }
+if [[ -n $lt_version ]] && [[ $lt_version != system ]]; then
+    [[ $DeBUG == 1 ]] && {
+echo "Deluge_2_later=$Deluge_2_later   qBittorrent_4_2_0_later=$qBittorrent_4_2_0_later
+lt_ver=$lt_ver  lt8_support=$lt8_support  lt_ver_qb3_ok=$lt_ver_qb3_ok  lt_ver_de2_ok=$lt_ver_de2_ok
+lt_version=$lt_version" ; }
+    if   [[ $lt_version == RC_1_0 ]]; then
+        bash $local_packages/package/libtorrent-rasterbar/install --logbase $LogTimes -m deb
+    elif [[ $lt_version == RC_1_1 ]]; then
+        if [[ $CODENAME == buster ]]; then
+            bash $local_packages/package/libtorrent-rasterbar/install --logbase $LogTimes -b RC_1_1
+        else
+            bash $local_packages/package/libtorrent-rasterbar/install --logbase $LogTimes -m deb2
+        fi
+    elif [[ $lt_version == RC_1_2 ]]; then
+        bash $local_packages/package/libtorrent-rasterbar/install --logbase $LogTimes -b RC_1_2
+    else
+        bash $local_packages/package/libtorrent-rasterbar/install --logbase $LogTimes -v $lt_version
+    fi
+fi
 
-[[ $de_version != No ]] && {
-echo -ne "Installing Deluge ... \n\n\n" ; install_deluge 2>&1 | tee $LogLocation/03.de1.log
-echo -ne "Configuring Deluge ... \n\n\n" ; config_deluge 2>&1 | tee $LogLocation/04.de2.log ; }
+if [[ $qb_version != No ]]; then
+    if [[ $qb_version == "Install from repo" ]]; then
+        bash $local_packages/package/qbittorrent/install --logbase $LogTimes -m apt 
+    elif [[ $qb_version == "Install from PPA" ]]; then
+        bash $local_packages/package/qbittorrent/install --logbase $LogTimes -m ppa
+    else
+        bash $local_packages/package/qbittorrent/install --logbase $LogTimes -m source -v $qb_version
+    fi
+    bash $local_packages/package/qbittorrent/configure   --logbase $LogTimes -u $iUser -p $iPass -w 2017 -i 9002 
+fi
+
+if [[ $de_version != No ]]; then
+    echo -ne "Installing Deluge ... \n\n\n" ; install_deluge 2>&1 | tee $LogLocation/03.de1.log
+    echo -ne "Configuring Deluge ... \n\n\n" ; config_deluge 2>&1 | tee $LogLocation/04.de2.log
+fi
 
 [[ $rt_version != No ]] && {
 echo -ne "Installing rTorrent ... \n\n\n" ; install_rtorrent 2>&1 | tee $LogLocation/07.rt.log
