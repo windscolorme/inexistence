@@ -1,20 +1,20 @@
 # Inexistence
 
 > This is a seedbox script focus on Chinese users, I would prefer [QuickBox](https://quickbox.io/), [swizzin](https://swizzin.ltd), [PGBlitz](https://pgblitz.com), [rtinst](https://github.com/arakasi72/rtinst) for non-Chinese users.  
-> And note that this README is outdated, I'm too lazy to keep it update.  
-
-> 警告：不保证本脚本能正常使用，翻车了不负责；上车前还请三思  
-> 建议重装完系统后安装本脚本，非全新安装的情况下翻车几率比较高  
-
-
-由于作者很懒+喜欢咕咕，本文内容已经很久没更新了，有些内容和当前的脚本已经不一样了，凑合着看吧。  
-
+> And this is just a seedbox script for private trackers, no plex, no emby, no usenet apps.  
+> Note that this README is outdated, I'm too lazy to keep it update.  
 
 ## Usage
 
 ```
 bash <(wget --no-check-certificate -qO- https://github.com/Aniverse/inexistence/raw/master/inexistence.sh)
 ```
+
+## Notes
+
+1. 只在独服和 KVM 虚拟化的 VPS 下测试通过，OpenVZ、Xen 等其他架构不保证没问题  
+2. 作者很懒+喜欢咕咕，本文的安装说明部分已经很久没更新了，有些内容和当前的脚本已经不一样了，凑合着看吧  
+3. 建议重装完系统后使用此脚本，非全新安装的情况下不确定因素太多容易翻车  
 
 ## Installation Guide
 
@@ -30,8 +30,6 @@ bash <(wget --no-check-certificate -qO- https://github.com/Aniverse/inexistence/
 ![升级系统](https://github.com/Aniverse/inexistence/raw/master/03.Files/images/inexistence.02.2.png)
 
 支持 `Ubuntu 16.04 / 18.04`、`Debian 8 / 9 / 10` ；`Ubuntu 14.04`、`Debian 7` 可以选择用脚本升级系统；其他系统不支持  
-（还没适配 Debian 10 的 rTorrent，我懒得动了，等 rtinst 作者搞吧）  
-（过阵子加入升级 16.04 到 18.04，升级 Debian 8 到 Debian 9 / 10 的选项，不过不知道这“阵子”是多久）  
 使用 ***`-s`*** 参数可以跳过对系统是否受支持的检查，不过这种情况下脚本能不能正常工作就是另一回事了  
 
 ![系统信息](https://github.com/Aniverse/inexistence/raw/master/03.Files/images/inexistence.03.png)
@@ -84,23 +82,22 @@ bash <(wget --no-check-certificate -qO- https://github.com/Aniverse/inexistence/
 
 7. ***qBittorrent***  
 **`--qb 4.1.6`**、**`--qb ppa`**、**`--qb No`**  
-如果你需要使用带跳过校验功能的 3.3.11，请在版本号选择处先输入 30 进入自定义版本号，然后输入 `3.3.17`  
+如果你需要使用带跳过校验功能的 3.3.11，请手动输入版本号 `3.3.11.1`  
 **使用修改版客户端、跳过校验 存在风险，后果自负**  
 
 
 8. ***Deluge***  
 **`--de '1.3.15 (Skip hash check)'`**、**`--de 1.3.9`**、**`--de repo`**、**`--de No`**  
-1.3.9 这个古董版本主要针对那些不支持新版本 Deluge 的站点，比如 HD4FANS 和 TCCF  
-2.0 版仍在开发中，不建议普通用户使用，基本上没有几个 PT 站的白名单内有它（有它的基本上都是采用黑名单而不是白名单的）  
+1.3.9 这个古董版本主要针对那些不支持新版本 Deluge 的站点，比如 HD4FANS  
 默认选项为从源码安装 1.3.15  
 此外还会安装一些实用的 Deluge 第三方插件：  
 - `AutoRemovePlus` 是自动删种插件，支持 WebUI 与 GtkUI  
-- `ltconfig` 是一个调整 `libtorrent-rasterbar` 参数的插件，在安装完后就启用了 `High Performance Seed` 模式  
+- `ltconfig` 是一个调整 `libtorrent-rasterbar` 参数的插件  
 - `Stats`、`TotalTraffic`、`Pieces`、`LabelPlus`、`YaRSS2`、`NoFolder` 都只能在 GUI 下设置，WebUI 下无法显示  
 - `Stats` 和 `TotalTraffic`、`Pieces` 分别可以实现速度曲线和流量统计、区块统计  
 - `LabelPlus` 是加强版的标签管理，支持自动根据 Tracker 对种子限速，刷 Frds 可用；也只有 GUI 可用    
 - `YaRSS2` 是用于 RSS 的插件；`NoFolder` 可以让 Deluge 在下载种子时不生成文件夹，辅种可用  
-隐藏选项 21，是可以跳过校验、全磁盘预分配的 1.3.15 版本  
+需要使用带跳过校验功能的 Deluge 1.3.15，请手动输入版本号 `1.3.15.1`  
 **使用修改版客户端、跳过校验 存在风险，后果自负**  
 
 
@@ -114,7 +111,7 @@ Deluge 和 qBittorrent 使用的是 [libtorrent-rasterbar](https://github.com/ar
 10. ***rTorrent***  
 **`--rt 0.9.4`**、**`--rt 0.9.3 --enable-ipv6`**、**`--rt No`**  
 这部分是调用我修改的 [rtinst](https://github.com/Aniverse/rtinst) 来安装的  
-注意，Ubuntu 18.04 和 Debian 9 因为 OpenSSL 的原因，只能使用新版本的 0.9.6 或 0.9.7，更低版本无法直接安装  
+注意，Ubuntu 18.04 和 Debian 9/10 因为 OpenSSL 的原因，只能使用新版本的 0.9.6 或 0.9.7，更低版本无法直接安装  
 - 安装 rTorrent，ruTorrent，nginx，ffmpeg，rar，h5ai 目录列表程序  
 - 0.9.2-0.9.4 支持 IPv6 用的是打好补丁的版本，属于修改版客户端  
 - 0.9.6 支持 IPv6 用的是 2018.01.30 的 feature-bind 分支，原生支持 IPv6  
@@ -153,8 +150,8 @@ VNC 目前在 Debian 下安装完后可能会无法连接，建议 Debian 系统
 14. ***wine & mono***  
 **`--wine-yes`**、**`--wine-no`**  
 这两个默认也是不安装的  
-`wine` 可以实现在 Linux 上运行 Windows 程序，比如 DVDFab、uTorrent  
-`mono` 是一个跨平台的 .NET 运行环境，BDinfoCLI、Jackett、Sonarr 等软件的运行都需要 mono   
+`wine` 可以实现在 Linux 上运行 Windows 程序，比如 DVDFab、uTorrent 等等  
+`mono` 是一个跨平台的 .NET 运行环境，BDinfoCLI、Jackett、Sonarr 等软件的运行都需要 mono  
 
 
 15. ***Some additional tools***  
@@ -184,9 +181,7 @@ VNC 目前在 Debian 下安装完后可能会无法连接，建议 Debian 系统
 **`--bbr-yes`**、**`--bbr-no`**  
 （如果你想安装魔改版 BBR 或 锐速，请移步到 [TrCtrlProToc0l](https://github.com/Aniverse/TrCtrlProToc0l) 脚本）  
 会检测你当前的内核版本，大于 4.9 是默认不安装新内核与 BBR，高于 4.9 是默认直接启用BBR（不安装新内核）  
-据说 4.12 存在 VirtIO 方面的 bug，4.13 及以上无法适配一般的魔改 BBR，因此采用了 4.11.12 内核  
 注意：更换内核或多或少是有点危险性的操作，有时候会导致无法正常启动系统  
-不过针对常见的 Online／OneProvider Paris 的独服我是准备了五个 firmware，应该没什么问题  
 
 
 19. ***系统设置***  
