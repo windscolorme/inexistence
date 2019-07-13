@@ -4,7 +4,7 @@
 # Author: Aniverse
 #
 script_update=2019.07.13
-script_version=r10021
+script_version=r10022
 ################################################################################################ Usage Guide
 
 usage_guide() {
@@ -184,5 +184,6 @@ function debug_log_location() {
         echo -n "$i = "
         eval echo "$"$i""
     done ; echo
+    read -t 10
 }
 

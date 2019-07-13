@@ -3,14 +3,15 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 
-script_update=2019.07.11
-script_version=r10000
+script_update=2019.07.13
+script_version=r10001
 
 ################################################################################################ Debug
 
 usage_for_debug() {
     export local_packages=/etc/inexistence/00.Installation
-    rm -f $local_packages/package/mono/uninstall ; nano $local_packages/package/mono/uninstall
+    export s=$local_packages/package/mono/uninstall
+    rm -f $s ; nano $s ; bash $s
 }
 
 ################################################################################################ Get options
@@ -20,13 +21,14 @@ unset AppName AppNameLower Need_SourceCode pm_action \
 
 function show_usage() { echo " Invalid option $1" ; exit 1 ; }
 
-OPTS=$(getopt -al debug,logbase: -- "$@")
+OPTS=$(getopt -o v:l:d -al version:,debug,logbase: -- "$@")
 [ ! $? = 0 ] && show_usage
 eval set -- "$OPTS"
 
 while [ -n "$1" ] ; do case "$1" in
-         --logbase      ) LogTimes="$2" ; shift 2 ;;
-         --debug        ) debug=1       ; shift   ;;
+    -v | --version      ) version="$2"  ; shift 2 ;;
+    -l | --logbase      ) LogTimes="$2" ; shift 2 ;;
+    -d | --debug        ) debug=1       ; shift   ;;
     -- ) shift ; break ;;
 esac ; done
 
@@ -54,15 +56,17 @@ set_variables_log_location
 function uninstall_mono() {
 
     echo >> $OutputLOG
-
     [[ $CODENAME == jessie ]] && dpkg -r libjpeg8 >> $OutputLOG 2>&1
     rm -f /etc/apt/sources.list.d/mono.list
     apt-get update >> $OutputLOG 2>&1
     apt-get purge -y mono-complete ca-certificates-mono >> $OutputLOG 2>&1
+    apt-get autoremove -y >> $OutputLOG 2>&1
 
     status_lock=${AppNameLower}-r
-    rm -f /tmp/$status_lock.1.lock /tmp/$status_lock.2.lock $LOCKLocation/$AppNameLower.lock
-    which mono > /dev/null && touch /tmp/$status_lock.2.lock || touch /tmp/$status_lock.1.lock
+    echo "status_lock=$status_lock" > /tmp/Variables
+    rm -f /tmp/$status_lock.1.lock /tmp/$status_lock.2.lock
+    { which mono > /dev/null || touch /tmp/$status_lock.1.lock ; } && touch /tmp/$status_lock.2.lock
+    [[ -f /tmp/$status_lock.1.lock ]] && rm -rf $LOCKLocation/$AppNameLower.lock
     echo >> $OutputLOG
 
 }
