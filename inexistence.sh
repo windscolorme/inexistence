@@ -16,8 +16,8 @@ export PATH
 SYSTEMCHECK=1
 DeBUG=0
 script_lang=eng
-INEXISTENCEVER=1.1.3.6
-INEXISTENCEDATE=2019.07.13
+INEXISTENCEVER=1.1.3.7
+INEXISTENCEDATE=2019.07.14
 default_branch=master
 # --------------------------------------------------------------------------------
 
@@ -661,12 +661,12 @@ echo ; }
 
 function ask_swap() {
 
-[[ -d /proc/vz ]] && [[ $tram -le 1926 ]] && {
+[[ -d /proc/vz ]] && [[ $tram -le 2048 ]] && {
 echo -e "${JG} You're using OpenVZ VPS and your RAM is less than 2GB\nYour memory may got exhausted sometimes when running this script\n"
 USESWAP=OpenVZ ; }
 
-if [[ -z $USESWAP ]] && [[ $tram -le 1926 ]]; then
-    echo -e  "${bold}${red}$lang_note_that${normal} ${bold}Your RAM is below ${red}1926MB${jiacu}, memory may got exhausted when compiling${normal}"
+if [[ -z $USESWAP ]] && [[ $tram -le 2048 ]]; then
+    echo -e  "${bold}${red}$lang_note_that${normal} ${bold}Your RAM is below ${red}2048MB${jiacu}, memory may got exhausted when compiling${normal}"
     read -ep "${bold}${yellow}Would you like to use swap when compiling?${normal} [${cyan}Y${normal}]es or [N]o: " version
     case $responce in
         [yY] | [yY][Ee][Ss] | "") USESWAP=Yes ;;
@@ -674,7 +674,7 @@ if [[ -z $USESWAP ]] && [[ $tram -le 1926 ]]; then
         *                       ) USESWAP=Yes ;;
     esac
     if [[ $USESWAP == Yes ]]; then
-        echo -e "${bold}${baiqingse} 1GB Swap ${normal} will be used\n"
+        echo -e "${bold}${baiqingse} 2GB Swap ${normal} will be used\n"
     else
         echo -e "${bold}Swap will not be used${normal}\n"
     fi
