@@ -16,7 +16,7 @@ export PATH
 SYSTEMCHECK=1
 DeBUG=0
 script_lang=eng
-INEXISTENCEVER=1.1.3.1
+INEXISTENCEVER=1.1.3.2
 INEXISTENCEDATE=2019.07.13
 default_branch=master
 # --------------------------------------------------------------------------------
@@ -87,14 +87,17 @@ times=$(expr $times + 1)
 export TZ=/usr/share/zoneinfo/Asia/Shanghai
 export DEBIAN_FRONTEND=noninteractive
 export APT_LISTCHANGES_FRONTEND=none
-export local_packages=/etc/inexistence/00.Installation
+
+export repo="https://github.com/Aniverse/inexistence"
+export local_repo_base=/etc/inexistence
+export local_packages=${local_repo_base}/00.Installation
 
 export LogBase=/log/inexistence
+export LockLocation=$LogBase/lock
 export LogTimes=$LogBase/$times
 export SourceLocation=$LogTimes/source
 export DebLocation=$LogTimes/deb
-export LogLocation=$LogTimes/install
-export LockLocation=$LogBase/lock
+export LogLocation=$LogTimes/log
 export WebROOT=/var/www
 
 # 临时
@@ -1542,7 +1545,7 @@ echo $iUser >> $LogBase/iUser.txt
 
 if [[ $aptsources == Yes ]] && [[ $CODENAME != jessie ]]; then
     cp /etc/apt/sources.list /etc/apt/sources.list."$(date "+%Y%m%d.%H%M")".bak
-    wget --no-check-certificate -O /etc/apt/sources.list https://github.com/Aniverse/inexistence/raw/master/00.Installation/template/$DISTROL.apt.sources
+    wget --no-check-certificate -O /etc/apt/sources.list ${repo}/raw/$iBranch/00.Installation/template/$DISTROL.apt.sources
     sed -i "s/RELEASE/$CODENAME/g" /etc/apt/sources.list
     [[ $DISTROL == debian ]] && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 5C808C2B65558117
 elif [[ $aptsources == Yes ]] && [[ $CODENAME == jessie ]]; then
@@ -1625,15 +1628,15 @@ rm -rf NConvert* ; }
 # Install checkinstall for Debian Buster
 [[ $CODENAME == buster ]] && {
 cd $SourceLocation
-wget -nv -N https://github.com/Aniverse/inexistence/raw/files/debian.package/checkinstall.1.6.2-4.stretch.amd64.deb
+wget -nv -N ${repo}/raw/files/debian.package/checkinstall.1.6.2-4.stretch.amd64.deb
 dpkg -i checkinstall.1.6.2-4.stretch.amd64.deb ; }
 
 sed -i "s/TRANSLATE=1/TRANSLATE=0/" /etc/checkinstallrc
 
 # Get repository
-[[ -d /etc/inexistence ]] && mv /etc/inexistence /etc/inexistence_old_$(date "+%Y%m%d_%H%M")
-git clone --depth=1 -b $iBranch https://github.com/Aniverse/inexistence /etc/inexistence
-chmod -R 755 /etc/inexistence
+[[ -d ${local_repo_base} ]] && mv ${local_repo_base} ${local_repo_base}_old_$(date "+%Y%m%d_%H%M")
+git clone --depth=1 -b $iBranch      $repo     $local_repo_base
+chmod -R 755 $local_repo_base
 
 # Add user
 if id -u $iUser >/dev/null 2>&1; then
@@ -1722,22 +1725,22 @@ echo "DefaultLimitNPROC=999998" >> /etc/systemd/system.conf
 bash $local_packages/alias $iUser $wangka $LogTimes $IntoBashrc
 
 # 脚本设置
-mkdir -p /etc/inexistence/00.Installation
-mkdir -p /etc/inexistence/01.Log
-mkdir -p /etc/inexistence/02.Tools/eac3to
-mkdir -p /etc/inexistence/03.Files
-mkdir -p /etc/inexistence/04.Upload
-mkdir -p /etc/inexistence/05.Output
-mkdir -p /etc/inexistence/06.BluRay
-mkdir -p /etc/inexistence/07.Screenshots
-mkdir -p /etc/inexistence/08.BDinfo
-mkdir -p /etc/inexistence/09.Torrents
-mkdir -p /etc/inexistence/10.Demux
-mkdir -p /etc/inexistence/11.Remux
-mkdir -p /etc/inexistence/12.Output2
+mkdir -p ${local_repo_base}/00.Installation
+mkdir -p ${local_repo_base}/01.Log
+mkdir -p ${local_repo_base}/02.Tools/eac3to
+mkdir -p ${local_repo_base}/03.Files
+mkdir -p ${local_repo_base}/04.Upload
+mkdir -p ${local_repo_base}/05.Output
+mkdir -p ${local_repo_base}/06.BluRay
+mkdir -p ${local_repo_base}/07.Screenshots
+mkdir -p ${local_repo_base}/08.BDinfo
+mkdir -p ${local_repo_base}/09.Torrents
+mkdir -p ${local_repo_base}/10.Demux
+mkdir -p ${local_repo_base}/11.Remux
+mkdir -p ${local_repo_base}/12.Output2
 
-ln -s /etc/inexistence $WebROOT/h5ai/inexistence
-cp -f /etc/inexistence/00.Installation/script/* /usr/local/bin
+ln -s ${local_repo_base} $WebROOT/h5ai/inexistence
+cp -f ${local_repo_base}/00.Installation/script/* /usr/local/bin
 sed -i -e "s|username=.*|username=$iUser|" -e "s|password=.*|password=$iPass|" /usr/local/bin/rtskip 
 
 echo -e "\n\n\n${bailvse}  STEP-ONE-COMPLETED  ${normal}\n\n"
@@ -1778,7 +1781,7 @@ apt-get --force-yes clean
 
 echo -e "${baihongse}executing update${normal}\n"
 cp /etc/apt/sources.list /etc/apt/sources.list."$(date "+%Y.%m.%d.%H.%M.%S")".bak
-wget --no-check-certificate -O /etc/apt/sources.list https://github.com/Aniverse/inexistence/raw/master/00.Installation/template/$DISTROL.apt.sources
+wget --no-check-certificate -O /etc/apt/sources.list ${repo}/raw/$iBranch/00.Installation/template/$DISTROL.apt.sources
 [[ $DISTROL == debian ]] && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 5C808C2B65558117
 
 if [[ $UPGRDAE2 == Yes ]]; then
@@ -1861,7 +1864,7 @@ else
         apt-get purge -y qtbase5-dev qttools5-dev-tools libqt5svg5-dev
         apt-get autoremove -y
         apt-get install -y libgl1-mesa-dev
-        wget -nv https://github.com/Aniverse/inexistence/raw/files/debian.package/qt.5.5.1.jessie.amd64.deb -O qt.5.5.1.jessie.amd64.deb
+        wget -nv ${repo}/raw/files/debian.package/qt.5.5.1.jessie.amd64.deb -O qt.5.5.1.jessie.amd64.deb
         dpkg -i qt.5.5.1.jessie.amd64.deb && rm -f qt.5.5.1.jessie.amd64.deb
         export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/Qt-5.5.1/lib/pkgconfig
         export PATH=/usr/local/Qt-5.5.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -1893,7 +1896,7 @@ else
 
     # 这个私货是修改 qBittorrent WebUI 里各个标签的默认排序以及宽度，符合我个人的习惯
     [[ $sihuo == yes ]] && {
-    wget -nv https://github.com/Aniverse/inexistence/raw/files/miscellaneous/qbt.4.1.6.webui.table.patch
+    wget -nv ${repo}/raw/files/miscellaneous/qbt.4.1.6.webui.table.patch
     patch -p1 < qbt.4.1.6.webui.table.patch ; }
 
     ./configure --prefix=/usr --disable-gui
@@ -1927,8 +1930,8 @@ function install_deluge() {
 
 
     if [[ $de_test == yes ]] ; then
-        [[ $de_version == yes ]] && bash <(wget -qO- https://github.com/Aniverse/inexistence/raw/master/00.Installation/install/deluge/install) -v $de_version
-        [[ $de_branch  == yes ]] && bash <(wget -qO- https://github.com/Aniverse/inexistence/raw/master/00.Installation/install/deluge/install) -b $de_version
+        [[ $de_version == yes ]] && bash <(wget -qO- ${repo}/raw/$iBranch/00.Installation/install/deluge/install) -v $de_version
+        [[ $de_branch  == yes ]] && bash <(wget -qO- ${repo}/raw/$iBranch/00.Installation/install/deluge/install) -b $de_version
     else
 
 if [[ $de_version == "Install from repo" ]]; then
@@ -1973,7 +1976,7 @@ else
 
     # 这个私货是修改 Deluge WebUI 里各个标签的默认排序以及宽度，符合我个人的习惯
     [[ $sihuo == yes ]] && {
-    wget -nv https://github.com/Aniverse/inexistence/raw/files/miscellaneous/deluge.1.3.15.deluge-all.js -O deluge/ui/web/js/deluge-all.js ; }
+    wget -nv ${repo}/raw/files/miscellaneous/deluge.1.3.15.deluge-all.js -O deluge/ui/web/js/deluge-all.js ; }
 
     python setup.py build  > /dev/null
     python setup.py install --install-layout=deb --record $LogLocation/install_deluge_filelist_$de_version.txt  > /dev/null # 输出太长了，省略大部分，反正也不重要
@@ -2002,7 +2005,7 @@ chown -R $iUser.$iUser /home/$iUser/deluge
 
 mkdir -p /root/.config
 [[ -d /root/.config/deluge ]] && { rm -rf /root/.config/deluge.old ; mv -f /root/.config/deluge /root/.config/deluge.old ; }
-cp -rf /etc/inexistence/00.Installation/template/config/deluge /root/.config/deluge
+cp -rf ${local_repo_base}/00.Installation/template/config/deluge /root/.config/deluge
 chmod -R 755 /root/.config
 
 cat > /tmp/deluge.userpass.py <<EOF
@@ -2025,8 +2028,8 @@ sed -i "s/delugeuser/$iUser/g" /root/.config/deluge/core.conf
 sed -i "s/DWSALT/$DWSALT/g" /root/.config/deluge/web.conf
 sed -i "s/DWP/$DWP/g" /root/.config/deluge/web.conf
 
-cp -f /etc/inexistence/00.Installation/template/systemd/deluged.service /etc/systemd/system/deluged.service
-cp -f /etc/inexistence/00.Installation/template/systemd/deluge-web.service /etc/systemd/system/deluge-web.service
+cp -f ${local_repo_base}/00.Installation/template/systemd/deluged.service /etc/systemd/system/deluged.service
+cp -f ${local_repo_base}/00.Installation/template/systemd/deluge-web.service /etc/systemd/system/deluge-web.service
 [[ $Deluge_2_later == Yes ]] && sed -i "s/deluge-web -l/deluge-web -d -l/" /etc/systemd/system/deluge-web.service
 # or perhaps Type=forking ?
 
@@ -2085,7 +2088,7 @@ npm run build 2>&1 | tee /tmp/flood.log
 rm -rf $LockLocation/flood.fail.lock
 # [[ `grep "npm ERR!" /tmp/flood.log` ]] && touch $LockLocation/flood.fail.lock
 
-cp -f /etc/inexistence/00.Installation/template/systemd/flood.service /etc/systemd/system/flood.service
+cp -f ${local_repo_base}/00.Installation/template/systemd/flood.service /etc/systemd/system/flood.service
 systemctl start flood
 systemctl enable flood
 
@@ -2180,8 +2183,8 @@ mkdir -p /home/$iUser/transmission/{download,torrent,watch} /root/.config/transm
 chown -R $iUser.$iUser /home/$iUser/transmission
 ln -s /home/$iUser/transmission/download $WebROOT/h5ai/$iUser/transmission
 
-cp -f /etc/inexistence/00.Installation/template/config/transmission.settings.json /root/.config/transmission-daemon/settings.json
-cp -f /etc/inexistence/00.Installation/template/systemd/transmission.service /etc/systemd/system/transmission.service
+cp -f ${local_repo_base}/00.Installation/template/config/transmission.settings.json /root/.config/transmission-daemon/settings.json
+cp -f ${local_repo_base}/00.Installation/template/systemd/transmission.service /etc/systemd/system/transmission.service
 [[ `command -v transmission-daemon` == /usr/local/bin/transmission-daemon ]] && sed -i "s/usr/usr\/local/g" /etc/systemd/system/transmission.service
 
 sed -i "s/RPCUSERNAME/$iUser/g" /root/.config/transmission-daemon/settings.json
@@ -2193,38 +2196,6 @@ systemctl enable transmission
 systemctl start transmission
 
 touch $LockLocation/transmission.lock ; }
-
-
-
-
-
-# --------------------- 安装、配置 Flexget --------------------- #
-
-function install_flexget() {
-
-  pip install markdown 
-  pip install flexget
-  pip install transmissionrpc deluge-client
-
-  mkdir -p /home/$iUser/{transmission,qbittorrent,rtorrent,deluge}/{download,watch} /root/.config/flexget
-
-  cp -f /etc/inexistence/00.Installation/template/config/flexget.config.yml /root/.config/flexget/config.yml
-  sed -i "s/SCRIPTUSERNAME/$iUser/g" /root/.config/flexget/config.yml
-  sed -i "s/SCRIPTPASSWORD/$iPass/g" /root/.config/flexget/config.yml
-
-  flexget web passwd $iPass 2>&1 | tee /tmp/flex.pass.output
-  rm -rf $LockLocation/flexget.{pass,conf}.lock
-  [[ `grep "not strong enough" /tmp/flex.pass.output` ]] && { touch $LockLocation/flexget.pass.lock ; echo -e "\nFailed to set flexget webui password\n" ; }
-  [[ `grep "schema validation" /tmp/flex.pass.output` ]] && { touch $LockLocation/flexget.conf.lock ; echo -e "\nFailed to set flexget config and webui password\n" ; }
-
-  cp -f /etc/inexistence/00.Installation/template/systemd/flexget.service /etc/systemd/system/flexget.service
-  systemctl daemon-reload
-  systemctl enable /etc/systemd/system/flexget.service
-  systemctl start flexget
-
-  touch $LockLocation/flexget.lock
-  echo -e "\n\n\n${bailvse}  FLEXGET-INSTALLATION-COMPLETED  ${normal}\n\n" ; }
-
 
 
 
@@ -2247,7 +2218,7 @@ echo -e "\n\n${bailvse}  BBR-INSTALLATION-COMPLETED  ${normal}\n" ; }
 # 安装 4.11.12 的内核
 function bbr_kernel_4_11_12() {
 
-if [[ $CODENAME == stretch ]]; then
+if [[ $CODENAME =~ (stretch|buster) ]]; then
     [[ ! `dpkg -l | grep libssl1.0.0` ]] && { echo -ne "\n  {bold}Installing libssl1.0.0 ...${normal} "
     # 2019.04.09 为毛要用 hk 的？估摸着我当时问毛球要的？
     echo -e "\ndeb http://ftp.hk.debian.org/debian jessie main\c" >> /etc/apt/sources.list
@@ -2259,10 +2230,10 @@ else
     [[ ! `dpkg -l | grep libssl1.0.0` ]] && { echo -ne "\n  ${bold}Installing libssl1.0.0 ...${normal} "  ; apt-get install -y libssl1.0.0 ; }
 fi
 
-wget -nv -N O 1.deb https://github.com/Aniverse/BitTorrentClientCollection/raw/master/Linux%20Kernel/BBR/linux-headers-4.11.12-all.deb
-wget -nv -N O 2.deb https://github.com/Aniverse/BitTorrentClientCollection/raw/master/Linux%20Kernel/BBR/linux-headers-4.11.12-amd64.deb
-wget -nv -N O 3.deb https://github.com/Aniverse/BitTorrentClientCollection/raw/master/Linux%20Kernel/BBR/linux-image-4.11.12-generic-amd64.deb
-dpkg -i [123].deb
+wget -nv -N -O 1.deb https://github.com/Aniverse/BitTorrentClientCollection/raw/master/Linux%20Kernel/BBR/linux-image-4.11.12-generic-amd64.deb
+wget -nv -N -O 2.deb https://github.com/Aniverse/BitTorrentClientCollection/raw/master/Linux%20Kernel/BBR/linux-headers-4.11.12-amd64.deb
+wget -nv -N -O 3.deb https://github.com/Aniverse/BitTorrentClientCollection/raw/master/Linux%20Kernel/BBR/linux-headers-4.11.12-all.deb
+dpkg -i 1.deb ; dpkg -i 2.deb ; dpkg -i 3.deb
 rm -rf [123].deb
 update-grub ; }
 
@@ -2283,7 +2254,7 @@ touch $LockLocation/bbr.lock ; }
 function bnx2_firmware() {
 mkdir -p /lib/firmware/bnx2 && cd /lib/firmware/bnx2
 bnx2="bnx2-mips-09-6.2.1b.fw bnx2-mips-06-6.2.3.fw bnx2-rv2p-09ax-6.0.17.fw bnx2-rv2p-09-6.0.17.fw bnx2-rv2p-06-6.0.15.fw"
-for f in $bnx2 ; do wget -nv -N https://github.com/Aniverse/inexistence/raw/files/firmware/bnx2/$f -O $f ; done ; }
+for f in $bnx2 ; do wget -nv -N ${repo}/raw/files/firmware/bnx2/$f -O $f ; done ; }
 
 
 
@@ -2304,9 +2275,9 @@ $iPass
 EOF
 vncserver && vncserver -kill :1
 mkdir -p /root/.vnc
-cp -f /etc/inexistence/00.Installation/template/xstartup.1.xfce4 /root/.vnc/xstartup
+cp -f ${local_repo_base}/00.Installation/template/xstartup.1.xfce4 /root/.vnc/xstartup
 chmod +x /root/.vnc/xstartup
-cp -f /etc/inexistence/00.Installation/template/systemd/vncserver.service /etc/systemd/system/vncserver.service
+cp -f ${local_repo_base}/00.Installation/template/systemd/vncserver.service /etc/systemd/system/vncserver.service
 
 systemctl daemon-reload
 systemctl enable vncserver
@@ -2391,7 +2362,7 @@ apt-get install -y mkvtoolnix mkvtoolnix-gui imagemagick
 
 ######################  eac3to  ######################
 
-cd /etc/inexistence/02.Tools/eac3to
+cd ${local_repo_base}/02.Tools/eac3to
 wget -nv -N http://madshi.net/eac3to.zip
 unzip -qq eac3to.zip
 rm -rf eac3to.zip ; cd
@@ -2633,8 +2604,9 @@ echo -ne "Installing rTorrent ... \n\n\n" ; install_rtorrent 2>&1 | tee $LogLoca
 echo -ne "Installing Transmission ... \n\n\n" ; install_transmission 2>&1 | tee $LogLocation/08.tr1.log
 echo -ne "Configuring Transmission ... " ; config_transmission 2>&1 | tee $LogLocation/09.tr2.log ; }
 
-[[ $InsFlex   == Yes ]]  && { echo -ne "Installing Flexget ... \n\n\n" ; install_flexget 2>&1 | tee $LogLocation/10.flexget.log ; }
-[[ $InsRclone == Yes ]]  && { bash $local_packages/package/rclone/install --logbase $LogTimes ; }
+[[ $InsFlex   == Yes ]]  && { bash $local_packages/package/flexget/install --logbase $LogTimes --system
+                              bash $local_packages/package/flexget/install --logbase $LogTimes --system -u $iUser -p $iPass -w 6566 ; }
+[[ $InsRclone == Yes ]]  && { bash $local_packages/package/rclone/install  --logbase $LogTimes ; }
 [[ $InsRDP    == VNC ]]  && { echo -ne "Installing VNC ... \n\n\n" ; install_vnc 2>&1 | tee $LogLocation/12.rdp.log ; }
 [[ $InsRDP    == X2Go ]] && { echo -ne "Installing X2Go ... \n\n\n" ; install_x2go 2>&1 | tee $LogLocation/12.rdp.log ; }
 [[ $InsWine   == Yes ]]  && { bash $local_packages/package/wine/install --logbase $LogTimes
