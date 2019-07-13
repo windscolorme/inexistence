@@ -1,0 +1,32 @@
+diff -Nur '--exclude=.git' '--exclude=.vs' flexget/webserver.py flexget-patched/webserver.py
+--- flexget/webserver.py	2019-07-02 18:07:23.109855300 +0200
++++ flexget-patched/webserver.py	2019-07-02 20:44:50.134619000 +0200
+@@ -232,7 +232,7 @@
+ 
+ 
+ @with_session
+-def get_user(username='flexget', session=None):
++def get_user(username='replace', session=None):
+     user = session.query(User).filter(User.name == username).first()
+     if not user:
+         user = User()
+@@ -242,8 +242,9 @@
+ 
+ 
+ @with_session
+-def change_password(username='flexget', password='', session=None):
++def change_password(username='replace', password='', session=None):
+     check = zxcvbn.zxcvbn(password, user_inputs=[username])
++    check['score'] = 4
+     if check['score'] < 3:
+         warning = check['feedback']['warning']
+         suggestions = ' '.join(check['feedback']['suggestions'])
+@@ -260,7 +261,7 @@
+ 
+ 
+ @with_session
+-def generate_token(username='flexget', session=None):
++def generate_token(username='replace', session=None):
+     user = get_user(username=username, session=session)
+     user.token = generate_key()
+     session.commit()
