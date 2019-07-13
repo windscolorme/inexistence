@@ -16,7 +16,7 @@ export PATH
 SYSTEMCHECK=1
 DeBUG=0
 script_lang=eng
-INEXISTENCEVER=1.1.3.4
+INEXISTENCEVER=1.1.3.5
 INEXISTENCEDATE=2019.07.13
 default_branch=master
 # --------------------------------------------------------------------------------
@@ -2437,7 +2437,7 @@ ask_apt_sources
 [[ -z $MAXCPUS ]] && MAXCPUS=$(nproc) ; ask_multi_threads
 ask_swap
 
-bash $local_packages/package/qbittorrent/ask  # test
+bash <(wget -qO- https://github.com/Aniverse/inexistence/raw/separate-script/00.Installation/package/qbittorrent/ask)
 
 ask_qbittorrent
 ask_deluge
