@@ -1,0 +1,88 @@
+#!/bin/bash
+#
+# https://github.com/Aniverse/inexistence
+# Author: Aniverse
+
+script_update=2019.07.13
+script_version=r10000
+
+################################################################################################ Debug
+
+usage_for_debug() {
+    export local_packages=/etc/inexistence/00.Installation
+    export s=$local_packages/package/flexget/uninstall
+    rm -f $s ; nano $s ; bash $s
+}
+
+################################################################################################ Get options
+
+unset AppName AppNameLower Need_SourceCode pm_action \
+      LogRootPath LogTimes DebLocation SCLocation LOCKLocation OutputLOG \
+      user
+
+function show_usage() { echo " Invalid option $1" ; exit 1 ; }
+
+OPTS=$(getopt -o u:v:l:d -al user:,version:,debug,logbase: -- "$@")
+[ ! $? = 0 ] && show_usage
+eval set -- "$OPTS"
+
+while [ -n "$1" ] ; do case "$1" in
+    -v | --version      ) version="$2"  ; shift 2 ;;
+    -u | --user         ) user="$2"     ; shift 2 ;;
+         --logbase      ) LogTimes="$2" ; shift 2 ;;
+         --debug        ) debug=1       ; shift   ;;
+    -- ) shift ; break ;;
+esac ; done
+
+################################################################################################ Set Variables
+
+AppName=flexget
+AppNameLower=flexget
+Need_SourceCode=no
+pm_action=uninstall
+
+if [[ -f /etc/inexistence/00.Installation/function ]]; then
+    source /etc/inexistence/00.Installation/function
+else
+    wget -qO /tmp/function https://github.com/Aniverse/inexistence/raw/master/00.Installation/function
+    source /tmp/function
+fi
+
+set_variables_log_location
+[[ $debug == 1 ]] && debug_log_location
+
+################################################################################################
+
+
+
+
+
+function uninstall_flexget() {
+
+    echo >> $OutputLOG
+
+    for iUser in XXXXXX; do
+        systemctl disable flexget@$iUser >> "$OutputLOG" 2>&1
+        systemctl stop    flexget@$iUser >> "$OutputLOG" 2>&1
+        su $iUser -c 'python2 -m pip uninstall flexget --user' >> "$OutputLOG" 2>&1
+    done
+
+    python2 -m pip uninstall flexget >> "$OutputLOG" 2>&1
+    rm -rf /home/*/.config/flexget*    /etc/systemd/system/flexget@.service
+
+    status_lock=${AppNameLower}-r
+    echo "status_lock=$status_lock" > /tmp/Variables
+    rm -f /tmp/$status_lock.1.lock /tmp/$status_lock.2.lock $LOCKLocation/$AppNameLower.lock
+    ps aux | grep -v grep | grep flexget -q && touch /tmp/$status_lock.2.lock || touch /tmp/$status_lock.1.lock
+    echo >> $OutputLOG
+
+}
+
+
+
+
+
+
+echo -ne "Uninstalling $AppName ..." | tee -a $OutputLOG
+uninstall_flexget & spinner $!
+check_status $status_lock | tee -a $OutputLOG
