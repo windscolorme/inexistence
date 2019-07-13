@@ -4,10 +4,12 @@
 # Author: Aniverse
 #
 script_update=2019.07.13
-script_version=r10025
+script_version=r10027
 ################################################################################################ Usage Guide
 
 usage_guide() {
+s=/etc/inexistence/00.Installation/function
+rm -f $s ; nano $s
 if [[ -f /etc/inexistence/00.Installation/function ]]; then
     source /etc/inexistence/00.Installation/function --output $OutputLOG
 else
@@ -148,10 +150,14 @@ function set_variables_log_location() {
 
     if [[ -z $LogTimes ]]; then
         LogTimes=$LogRootPath/single
-        OutputLOG=$LogTimes/log/$pm_action.$AppNameLower.txt
+        LogLocation=$LogTimes/log
+        OutputLOG=$LogLocation/$pm_action.$AppNameLower.txt
     elif [[ $LogTimes == none ]]; then
         LogTimes=/tmp/ttmmpp
         OutputLOG="/dev/null"
+    else
+        LogLocation=$LogTimes/log
+        OutputLOG=$LogTimes/log/$pm_action.$AppNameLower.txt
     fi
 
     if [[ $pm_action != uninstall ]]; then
@@ -159,7 +165,7 @@ function set_variables_log_location() {
         DebLocation=$LogRootPath/deb
     fi
 
-    mkdir -p $LogRootPath $LogTimes $DebLocation $SCLocation $LOCKLocation $(dirname $OutputLOG)
+    mkdir -p $LogRootPath $LogTimes $DebLocation $SCLocation $LOCKLocation $LogLocation
     { lines ; echo -e "$(date "+%Y.%m.%d.%H.%M.%S") $AppName" ; lines ; } >> $OutputLOG
 
     if [[ -n $SCLocation ]] && [[ $pm_action != uninstall ]]; then
