@@ -4,7 +4,7 @@
 # Author: Aniverse
 #
 script_update=2019.07.13
-script_version=r10020
+script_version=r10021
 ################################################################################################ Usage Guide
 
 usage_guide() {
@@ -73,11 +73,12 @@ function check_url() {
 
 
 function check_status() {
+    # When install_app & spinner $!, the variable $status_lock will not be passed to the install script, so we use another file to source
     source /tmp/Variables
-    local LockName=$1
-    if [[ -f /tmp/$LockName.1.lock ]]; then
+
+    if [[ -f /tmp/"${status_lock}".1.lock ]]; then
         echo -e " ${green}${bold}DONE${normal}"
-    elif [[ -f /tmp/$LockName.2.lock ]]; then
+    elif [[ -f /tmp/"${status_lock}".2.lock ]]; then
         echo -e " ${red}${bold}FAILED${normal}"
     else
         echo -e " ${red}${bold}Unknown State${normal}"
