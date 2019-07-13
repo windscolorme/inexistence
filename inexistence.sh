@@ -16,8 +16,8 @@ export PATH
 SYSTEMCHECK=1
 DeBUG=0
 script_lang=eng
-INEXISTENCEVER=1.1.3.0
-INEXISTENCEDATE=2019.07.12
+INEXISTENCEVER=1.1.3.1
+INEXISTENCEDATE=2019.07.13
 default_branch=master
 # --------------------------------------------------------------------------------
 
@@ -808,7 +808,6 @@ while [[ -z $de_version ]]; do
         03 | 3) de_version=1.3.14 ;;
         04 | 4) de_version=1.3.15 ;;
         11) de_version=2.0.dev ;;
-        21) de_version='1.3.15_skip_hash_check' ;;
         30) _input_version && de_version="${input_version_num}" ;;
         31) _input_version && de_version="${input_version_num}" && de_test=yes &&  de_branch=yes ;;
         32) _input_version && de_version="${input_version_num}" && de_test=yes && de_version=yes ;;
@@ -822,7 +821,6 @@ done
 
 [[ $(echo $de_version | grep -oP "[0-9.]+") ]] && { version_ge $de_version 1.3.11 || Deluge_ssl_fix_patch=Yes ; }
 [[ $(echo $de_version | grep -oP "[0-9.]+") ]] && { version_ge $de_version 2.0 && Deluge_2_later=Yes || Deluge_2_later=No ; }
-[[ $de_version == '1.3.15_skip_hash_check'  ]] && Deluge_1_3_15_skip_hash_check_patch=Yes
 
 if [[ $de_version == No ]]; then
     echo "${baizise}Deluge will ${baihongse}not${baizise} be installed${normal}"
@@ -1926,6 +1924,8 @@ fi ; }
 # 安装 Deluge
 function install_deluge() {
 
+
+
     if [[ $de_test == yes ]] ; then
         [[ $de_version == yes ]] && bash <(wget -qO- https://github.com/Aniverse/inexistence/raw/master/00.Installation/install/deluge/install) -v $de_version
         [[ $de_branch  == yes ]] && bash <(wget -qO- https://github.com/Aniverse/inexistence/raw/master/00.Installation/install/deluge/install) -b $de_version
@@ -1943,13 +1943,7 @@ else
     [[ $Deluge_2_later == Yes ]] && pip install --upgrade twisted pillow rencode pyopenssl
     cd $SourceLocation
 
-    if [[ $Deluge_1_3_15_skip_hash_check_patch == Yes ]]; then
-        export de_version=1.3.15
-        wget -nv -N "https://github.com/Aniverse/BitTorrentClientCollection/raw/master/Deluge/deluge-1.3.15.skip.tar.gz"
-        tar xf deluge-1.3.15.skip.tar.gz
-        rm -f deluge-1.3.15.skip.tar.gz
-        cd deluge-1.3.15
-    elif [[ $de_version == 2.0.dev ]]; then
+    if [[ $de_version == 2.0.dev ]]; then
         git clone -b develop https://github.com/deluge-torrent/deluge deluge-$de_version
         cd deluge-$de_version
     else
@@ -1985,6 +1979,7 @@ else
     python setup.py install --install-layout=deb --record $LogLocation/install_deluge_filelist_$de_version.txt  > /dev/null # 输出太长了，省略大部分，反正也不重要
     python setup.py install_data # For Desktop users
 
+    [[ $de_version == '1.3.15.1'  ]] && 先咕咕
     [[ $Deluge_ssl_fix_patch == Yes ]] && mv -f /usr/bin/deluged2 /usr/bin/deluged # 让老版本 Deluged 保留，其他用新版本
 
 fi
