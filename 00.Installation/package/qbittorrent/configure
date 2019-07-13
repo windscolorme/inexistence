@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 #
-script_update=2019.07.10
-script_version=r11007
+script_update=2019.07.13
+script_version=r11008
 
 ################################################################################################ Debug
 
@@ -38,7 +38,7 @@ done
 AppName=qBittorrent
 AppNameLower=qbittorrent
 Need_SourceCode=no  # do not need source code when configuring
-pm_action=install
+pm_action=configure
 
 if [[ -f /etc/inexistence/00.Installation/function ]]; then
     source /etc/inexistence/00.Installation/function
@@ -48,6 +48,7 @@ else
 fi
 
 set_variables_log_location
+[[ $debug == 1 ]] && debug_log_location
 
 [[ -z $iUser || -z $iPass ]] && { echo -e "Please specify username and password" ; exit 1 ; }
 [[ -z $iHome ]] && [[ $iUser == root ]] && iHome=/root
@@ -140,7 +141,8 @@ EOF
     systemctl start qbittorrent@$iUser
     [[ -d /var/www/h5ai ]] && ln -s $iHome/qbittorrent/download /var/www/h5ai/$iUser/qbittorrent
 
-   status_lock=$AppName-config
+   status_lock=$AppName-c
+   echo "status_lock=$status_lock" > /tmp/Variables
    rm -f /tmp/$status_lock.1.lock /tmp/$status_lock.2.lock 
    ps --user $iUser | grep qbittorrent-nox -q && touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock
    echo >> $OutputLOG
@@ -150,6 +152,6 @@ EOF
 
 
 
-echo -ne "Configurating $AppName ..." | tee -a $OutputLOG
+echo -ne "Configuring $AppName ..." | tee -a $OutputLOG
 configure_qbittorrent & spinner $!
-check_status $AppName-config | tee -a $OutputLOG
+check_status $status_lock | tee -a $OutputLOG
