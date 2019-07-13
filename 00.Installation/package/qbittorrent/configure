@@ -4,7 +4,7 @@
 # Author: Aniverse
 #
 script_update=2019.07.13
-script_version=r11008
+script_version=r11009
 
 ################################################################################################ Debug
 
@@ -50,7 +50,8 @@ fi
 set_variables_log_location
 [[ $debug == 1 ]] && debug_log_location
 
-[[ -z $iUser || -z $iPass ]] && { echo -e "Please specify username and password" ; exit 1 ; }
+[[ -z $iUser || -z $iPass ]] && { echo -e "ERROR: Please specify username and password" ; exit 1 ; }
+id -u $iUser >/dev/null 2>&1 || { echo -e "ERROR: User $iUser doesn't exist" ; exit 1 ; }
 [[ -z $iHome ]] && [[ $iUser == root ]] && iHome=/root
 [[ -z $iHome ]] && [[ $iUser != root ]] && iHome=/home/$iUser
 [[ -z $wPort ]] && wPort=2017
@@ -66,7 +67,6 @@ set_variables_log_location
 function configure_qbittorrent() {
 
     echo >> $OutputLOG
-
     cat  << EOF > /etc/systemd/system/qbittorrent@.service
 [Unit]
 Description=qBittorrent Daemon Service
@@ -87,14 +87,12 @@ WantedBy=multi-user.target
 EOF
 systemctl daemon-reload
 
-    [[ -d $iHome/.config/qBittorrent ]] && {
+    if [[ -d $iHome/.config/qBittorrent ]]; then
         mv $iHome/.config/qBittorrent $iHome/.config/qBittorrent.old.$times
         rm -rf mv $iHome/.config/qBittorrent
-    }
+    fi
 
-    mkdir -p $iHome/qbittorrent/{download,torrent,watch} $iHome/.config/qBittorrent
-    chmod -R 755 $iHome/.config/qBittorrent
-    chown -R $iUser.$iUser $iHome/qbittorrent $iHome/.config/qBittorrent
+    mkdir -p $iHome/qbittorrent/{download,torrent,watch}   $iHome/.config/qBittorrent
 
     cp -f $local_packages/package/qbittorrent/qb /usr/local/bin/qb
     chmod 755 /usr/local/bin/qb
@@ -137,8 +135,9 @@ WebUI\Password_ha1=@ByteArray($qbPass)
 WebUI\Username=$iUser
 EOF
 
+    chown -R $iUser.$iUser $iHome/qbittorrent $iHome/.config/qBittorrent
     systemctl enable qbittorrent@$iUser >> $OutputLOG 2>&1
-    systemctl start qbittorrent@$iUser
+    systemctl start  qbittorrent@$iUser >> $OutputLOG 2>&1
     [[ -d /var/www/h5ai ]] && ln -s $iHome/qbittorrent/download /var/www/h5ai/$iUser/qbittorrent
 
    status_lock=$AppName-c
