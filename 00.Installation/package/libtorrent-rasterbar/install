@@ -4,13 +4,13 @@
 # Author: Aniverse
 #
 script_update=2019.07.13
-script_version=r11043
+script_version=r11044
 
 ################################################################################################ Debug
 
 usage_for_me() {
     export local_packages=/etc/inexistence/00.Installation
-    export s=$local_packages/package/wine/install
+    export s=$local_packages/package/libtorrent-rasterbar/install
     rm -f $s ; nano $s
     bash $s -m deb2 --logbase $LogTimes
     bash <(wget -qO- https://github.com/Aniverse/inexistence/raw/master/00.Installation/libtorrent-rasterbar/install) -m deb2
@@ -68,7 +68,7 @@ set_variables_log_location
 
 ################################################################################################ Set Variables 2
 
-cancel() { echo -e "${normal}" ; rm -f $HOME/.lt.git.tag ; exit ; }
+cancel() { echo -e "${normal}" ; rm -f /tmp/.lt.git.tag ; exit ; }
 trap cancel SIGINT
 
 [[ -z $mode ]] && [[ -n $version ]] && mode=source
@@ -86,13 +86,7 @@ echo $version | grep -qEo "[012]\.[0-9]+\.[0-9]+" && branch=$( echo libtorrent-$
 [[ $mode == source ]] && [[ -z $branch ]] && { echo -e "\n${JG} No branch of libtorrent-rasterbar detected, force to use RC_1_1 branch ${normal}\n" ; branch=RC_1_1 ; version=1.1.13 ;  }
 [[ $debug == 1 ]] && echo -e "version=$version, branch=$branch, SCLocation=$SCLocation"
 
-# Check if input branch exists
-[[ -n $branch ]] && {
-rm -f $HOME/.lt.git.tag
-git ls-remote --tags  $git_repo | awk '{print $NF}' >> $HOME/.lt.git.tag
-git ls-remote --heads $git_repo | awk '{print $NF}' >> $HOME/.lt.git.tag
-grep $branch $HOME/.lt.git.tag -q || { echo -e "\n${CW} No such branch!${normal}\n" ; rm -f $HOME/.lt.git.tag ; exit 1 ; }
-rm -f $HOME/.lt.git.tag ; }
+check_remote_git_repo_branch  $git_repo  $branch
 
 # Use RC_1_1 if not specified
 [[ -z $branch ]] && branch=RC_1_1
