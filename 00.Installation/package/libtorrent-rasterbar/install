@@ -4,7 +4,7 @@
 # Author: Aniverse
 #
 script_update=2019.07.13
-script_version=r11044
+script_version=r11045
 
 ################################################################################################ Debug
 
@@ -86,7 +86,7 @@ echo $version | grep -qEo "[012]\.[0-9]+\.[0-9]+" && branch=$( echo libtorrent-$
 [[ $mode == source ]] && [[ -z $branch ]] && { echo -e "\n${JG} No branch of libtorrent-rasterbar detected, force to use RC_1_1 branch ${normal}\n" ; branch=RC_1_1 ; version=1.1.13 ;  }
 [[ $debug == 1 ]] && echo -e "version=$version, branch=$branch, SCLocation=$SCLocation"
 
-check_remote_git_repo_branch  $git_repo  $branch
+[[ -n $branch ]] && check_remote_git_repo_branch  $git_repo  $branch
 
 # Use RC_1_1 if not specified
 [[ -z $branch ]] && branch=RC_1_1
