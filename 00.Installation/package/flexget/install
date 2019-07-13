@@ -38,7 +38,7 @@ esac ; done
 
 ################################################################################################ Set Variables
 
-AppName=flexget
+AppName=FlexGet
 AppNameLower=flexget
 Need_SourceCode=no
 pm_action=install
