@@ -16,7 +16,7 @@ export PATH
 SYSTEMCHECK=1
 DeBUG=0
 script_lang=eng
-INEXISTENCEVER=1.1.3.5
+INEXISTENCEVER=1.1.3.6
 INEXISTENCEDATE=2019.07.13
 default_branch=master
 # --------------------------------------------------------------------------------
@@ -33,17 +33,17 @@ while [ -n "$1" ] ; do case "$1" in
     -p | --password ) iPass=$2       ; shift 2 ;;
     -b | --branch   ) iBranch=$2     ; shift 2 ;;
 
-    --qb            ) { if [[ $2 == ppa ]]; then qb_version='Install from PPA'   ; elif [[ $2 == repo ]]; then qb_version='Install from repo'   ; else qb_version=$2   ; fi ; } ; shift 2 ;;
-    --tr            ) { if [[ $2 == ppa ]]; then tr_version='Install from PPA'   ; elif [[ $2 == repo ]]; then tr_version='Install from repo'   ; else tr_version=$2   ; fi ; } ; shift 2 ;;
-    --de            ) { if [[ $2 == ppa ]]; then de_version='Install from PPA'   ; elif [[ $2 == repo ]]; then de_version='Install from repo'   ; else de_version=$2   ; fi ; } ; shift 2 ;;
-    --rt            ) rt_version=$2 ; shift 2 ;;
-    --lt            ) lt_version=$2 ; shift 2 ;;
+    --qb            ) qb_version=$2  ; shift 2 ;;
+    --tr            ) tr_version=$2  ; shift 2 ;;
+    --de            ) de_version=$2  ; shift 2 ;;
+    --rt            ) rt_version=$2  ; shift 2 ;;
+    --lt            ) lt_version=$2  ; shift 2 ;;
 
     -d | --debug    ) DeBUG=1           ; shift ;;
     -s | --skip     ) SYSTEMCHECK=0     ; shift ;;
     -y | --yes      ) ForceYes=1        ; shift ;;
 
-    --sihuo         ) sihuo=yes        ; shift ;;
+    --sihuo         ) sihuo=yes         ; shift ;;
     --eng           ) script_lang=eng   ; shift ;;
     --chs           ) script_lang=chs   ; shift ;;
     --tr-skip       ) TRdefault="No"    ; shift ;;
@@ -59,14 +59,14 @@ while [ -n "$1" ] ; do case "$1" in
     --rdp-vnc       ) InsRDP="VNC"      ; shift ;;
     --rdp-x2go      ) InsRDP="X2Go"     ; shift ;;
     --rdp-no        ) InsRDP="No"       ; shift ;;
-    --wine-yes      ) InsWine="Yes"     ; shift ;;
-    --wine-no       ) InsWine="No"      ; shift ;;
+    --wine-yes      ) InsWine=yes       ; shift ;;
+    --wine-no       ) InsWine=no        ; shift ;;
     --tools-yes     ) InsTools="Yes"    ; shift ;;
     --tools-no      ) InsTools="No"     ; shift ;;
-    --flexget-yes   ) InsFlex="Yes"     ; shift ;;
-    --flexget-no    ) InsFlex="No"      ; shift ;;
-    --rclone-yes    ) InsRclone="Yes"   ; shift ;;
-    --rclone-no     ) InsRclone="No"    ; shift ;;
+    --flexget-yes   ) InsFlex=yes       ; shift ;;
+    --flexget-no    ) InsFlex=no        ; shift ;;
+    --rclone-yes    ) InsRclone=yes     ; shift ;;
+    --rclone-no     ) InsRclone=no      ; shift ;;
     --tweaks-yes    ) UseTweaks="Yes"   ; shift ;;
     --tweaks-no     ) UseTweaks="No"    ; shift ;;
     --mt-single     ) MAXCPUS=1         ; shift ;;
@@ -77,13 +77,12 @@ while [ -n "$1" ] ; do case "$1" in
     -- ) shift ; break ;;
 esac ; done
 
-# [ $# -gt 0 ] && { echo "No arguments allowed $1 is not a valid argument" ; exit 1 ; }
 [[ $DeBUG == 1 ]] && { iUser=aniverse ; aptsources=No ; MAXCPUS=$(nproc) ; }
-
+# --------------------------------------------------------------------------------
 [[ -z $iBranch ]] && iBranch=$default_branch
 times=$(cat /log/inexistence/iUser.txt 2>/dev/null | wc -l)
 times=$(expr $times + 1)
-# --------------------------------------------------------------------------------
+
 export TZ=/usr/share/zoneinfo/Asia/Shanghai
 export DEBIAN_FRONTEND=noninteractive
 export APT_LISTCHANGES_FRONTEND=none
@@ -100,10 +99,6 @@ export DebLocation=$LogTimes/deb
 export LogLocation=$LogTimes/log
 export WebROOT=/var/www
 
-# 临时
-# 一个想法，脚本传入到单个脚本里一个参数 log-base，比如装 de 脚本的 log 位置：
-# log-base=/log/inexistence/$times, SourceLocation=$log-base/source
-# bash deluge/configure -u aniverse -p test20190416 --dport 58856 --wport 8112 --iport 22022 --logbase /log/inexistence/$times
 # --------------------------------------------------------------------------------
 ### 颜色样式 ###
 function _colors() {
@@ -121,8 +116,8 @@ CW="${bold}${baihongse} ERROR ${jiacu}";ZY="${baihongse}${bold} ATTENTION ${jiac
 _colors
 # --------------------------------------------------------------------------------
 
-function swap_on()  { dd if=/dev/zero of=/root/.swapfile bs=1M count=2048  ;  mkswap /root/.swapfile  ;  swapon /root/.swapfile  ;  swapon -s  ;  }
-function swap_off() { swapoff /root/.swapfile  ;  rm -f /root/.swapfile ; }
+function swap_on()  { dd if=/dev/zero of=/etc/.swapfile bs=1M count=2048;mkswap /etc/.swapfile;swapon /etc/.swapfile;swapon -s; }
+function swap_off() { swapoff /etc/.swapfile;rm -f /etc/.swapfile; }
 
 # 用于退出脚本
 export TOP_PID=$$
@@ -163,9 +158,9 @@ client_location=$( command -v ${client_name} )
 
 [[ "${client_name}" == "qbittorrent-nox" ]] && client_name=qb
 [[ "${client_name}" == "transmission-daemon" ]] && client_name=tr
-[[ "${client_name}" == "deluged" ]] && client_name=de
+[[ "${client_name}" == "deluged" ]]  && client_name=de
 [[ "${client_name}" == "rtorrent" ]] && client_name=rt
-[[ "${client_name}" == "flexget" ]] && client_name=flex
+[[ "${client_name}" == "flexget" ]]  && client_name=flex
 
 if [[ -a $client_location ]]; then
     eval "${client_name}"_installed=Yes
@@ -193,8 +188,7 @@ lt_ver_de2_ok=No ; [[ ! -z $lt_ver ]] && version_ge $lt_ver 1.1.3 && lt_ver_de2_
 # --------------------------------------------------------------------------------
 
 ### 输入自己想要的软件版本 ###
-# ${blue}(use it at your own risk)${normal}
-function _input_version() {
+function input_version() {
 if [[ $script_lang == eng ]]; then
 echo -e "\n${JG} ${bold}Use it at your own risk and make sure to input version correctly${normal}"
 read -ep "${bold}${yellow}Input the version you want: ${cyan}" input_version_num; echo -n "${normal}"
@@ -245,25 +239,19 @@ fi
 
 
 
-
-
-
-
-
-
 # --------------------- 系统检查 --------------------- #
 function _intro() {
 
-clear
+[[ $DeBUG != 1 ]] && clear
 
 # 检查是否以 root 权限运行脚本
-if [[ $DeBUG != 1 ]]; then if [[ $EUID != 0 ]]; then echo -e "\n${title}${bold}Naive! I think this young man will not be able to run this script without root privileges.${normal}\n" ; exit 1
-else echo -e "\n${green}${bold}Excited! You're running this script as root. Let's make some big news ... ${normal}" ; fi ; fi
+if [[ $DeBUG != 1 ]] && [[ $EUID != 0 ]]; then
+    echo -e "\n${title}${bold}Naive! You cannot run this script without root privileges.${normal}\n" ; exit 1
+else
+    echo -e "\n${green}${bold}You're running this script as root. Let's continue ... ${normal}" 
+fi
 
-arch=$( uname -m ) # 架构，可以识别 ARM
-lbit=$( getconf LONG_BIT ) # 只显示多少位，无法识别 ARM
-
-# 检查是否为 x86_64 架构
+arch=$( uname -m )
 [[ $arch != x86_64 ]] && { echo -e "${title}${bold}Too simple! Only x86_64 is supported${normal}" ; exit 1 ; }
 
 # 检查系统版本；不是 Ubuntu 或 Debian 的就不管了，反正不支持……
@@ -292,10 +280,6 @@ which wget | grep -q wget || { echo "${bold}Now the script is installing ${yello
 which wget | grep -q wget || { echo -e "${red}${bold}Failed to install wget, please check it and rerun once it is resolved${normal}\n" && kill -s TERM $TOP_PID ; }
 
 echo -e "${bold}Checking your server's public IPv4 address ...${normal}"
-# serveripv4=$( ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1' )
-# serveripv4=$( ifconfig -a|grep inet|grep -v 127.0.0.1|grep -v inet6|awk '{print $2}'|tr -d "addr:" )
-# serveripv4=$( ip route get 8.8.8.8 | awk '{print $3}' )
-# isInternalIpAddress "$serveripv4" || serveripv4=$( wget --no-check-certificate -t1 -T6 -qO- v4.ipv6-test.com/api/myip.php )
 serveripv4=$( wget --no-check-certificate -t1 -T6 -qO- v4.ipv6-test.com/api/myip.php )
 isValidIpAddress "$serveripv4" || serveripv4=$( wget --no-check-certificate -t1 -T6 -qO- checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//' )
 isValidIpAddress "$serveripv4" || serveripv4=$( wget --no-check-certificate -t1 -T7 -qO- ipecho.net/plain )
@@ -316,13 +300,7 @@ rm -f /tmp/ipapi 2>&1
 echo "${bold}Checking your server's public IPv6 address ...${normal}"
 
 serveripv6=$( wget -t1 -T5 -qO- v6.ipv6-test.com/api/myip.php | grep -Eo "[0-9a-z:]+" | head -n1 )
-# serveripv6=$( wget --no-check-certificate -qO- -t1 -T8 ipv6.icanhazip.com )
-
-# 2018.10.10 重新启用对于网卡的判断。我忘了是出于什么原因我之前禁用了它？
-# 2019.04.09 有些特殊情况，还是再改下
-# 最好不要依赖 ifconfig，因为说不定系统里没有 ifconfig
 wangka=$(ip route get 8.8.8.8 | awk '{print $5}')
-# serverlocalipv6=$( ip addr show dev $wangka | sed -e's/^.*inet6 \([^ ]*\)\/.*$/\1/;t;d' | grep -v fe80 | head -n1 )
 
 echo -e "${bold}Checking your server's specification ...${normal}"
 
@@ -372,11 +350,6 @@ fi
 
 [[ "$virtual" != KVM ]] && grep -q QEMU /proc/cpuinfo && virt="QEMU"
 [[ -z "$virtual" ]] && virt="No Virtualization Detected"
-#wget --no-check-certificate -qO /usr/local/bin/virt-what https://github.com/Aniverse/inexistence/raw/files/software/virt-what
-#mkdir -p /usr/lib/virt-what
-#wget --no-check-certificate -qO /usr/lib/virt-what/virt-what-cpuid-helper https://github.com/Aniverse/inexistence/raw/master/files/software/virt-what-cpuid-helper
-#chmod +x /usr/local/bin/virt-what /usr/lib/virt-what/virt-what-cpuid-helper
-#virt="$(virt-what)" 2>/dev/null
 
 kern=$( uname -r )
 cputhreads=$( grep 'processor' /proc/cpuinfo | sort -u | wc -l )
@@ -398,27 +371,33 @@ echo -e "${bold}Checking bittorrent clients' version ...${normal}"
 _check_install_2
 _client_version_check
 
-# 有可能出现刚开的机器没有 apt update，直接 apt-cache policy 提示找不到包的情况
-QB_repo_ver=$(apt-cache policy qbittorrent-nox | grep -B1 http | grep -Eo "[234]\.[0-9.]+\.[0-9.]+" | head -1)
-[[ -z $QB_repo_ver ]] && { [[ $CODENAME == bionic ]] && QB_repo_ver=4.0.3 ; [[ $CODENAME == xenial ]] && QB_repo_ver=3.3.1 ; [[ $CODENAME == jessie ]] && QB_repo_ver=3.1.10 ; [[ $CODENAME == stretch ]] && QB_repo_ver=3.3.7 ; }
+if [[ $CODENAME == bionic ]];then
+    QB_repo_ver=4.0.3
+    TR_repo_ver=2.92
+    DE_repo_ver=1.3.15
+elif [[ $CODENAME == xenial ]];then
+    QB_repo_ver=3.3.1
+    TR_repo_ver=2.84
+    DE_repo_ver=1.3.12
+elif [[ $CODENAME == buster ]];then
+    QB_repo_ver=4.1.5
+    TR_repo_ver=2.94
+    DE_repo_ver=1.3.15
+elif [[ $CODENAME == stretch ]];then
+    QB_repo_ver=3.3.7
+    TR_repo_ver=2.92
+    DE_repo_ver=1.3.15
+elif [[ $CODENAME == jessie ]];then
+    QB_repo_ver=3.1.10
+    TR_repo_ver=2.84
+    DE_repo_ver=1.3.10
+fi
 
-QB_latest_ver=$(wget -qO- https://github.com/qbittorrent/qBittorrent/releases | grep releases/tag | grep -Eo "[45]\.[0-9.]+" | head -1)
-[[ -z $QB_latest_ver ]] && QB_latest_ver=4.1.6
+QB_latest_ver=4.1.6
+DE_latest_ver=1.3.15 # 2.0.3 is not available for Stable PPA
+TR_latest_ver=2.94
 
-DE_repo_ver=$(apt-cache policy deluged | grep -B1 http | grep -Eo "[12]\.[0-9.]+\.[0-9.]+" | head -1)
-[[ -z $DE_repo_ver ]] && { [[ $CODENAME == bionic ]] && DE_repo_ver=1.3.15 ; [[ $CODENAME == xenial ]] && DE_repo_ver=1.3.12 ; [[ $CODENAME == jessie ]] && DE_repo_ver=1.3.10 ; [[ $CODENAME == stretch ]] && DE_repo_ver=1.3.13 ; }
-
-DE_latest_ver=$(wget -qO- https://dev.deluge-torrent.org/wiki/ReleaseNotes | grep wiki/ReleaseNotes | grep -Eo "[12]\.[0-9.]+" | sed 's/">/ /' | awk '{print $1}' | head -1)
-[[ -z $DE_latest_ver ]] && DE_latest_ver=1.3.15
-# DE_github_latest_ver=` wget -qO- https://github.com/deluge-torrent/deluge/releases | grep releases/tag | grep -Eo "[12]\.[0-9.]+.*" | sed 's/\">//' | head -n1 `
-
-TR_repo_ver=$(apt-cache policy transmission-daemon | grep -B1 http | grep -Eo "[23]\.[0-9.]+" | head -1)
-[[ -z $TR_repo_ver ]] && { [[ $CODENAME == bionic ]] && TR_repo_ver=2.92 ; [[ $CODENAME == xenial ]] && TR_repo_ver=2.84 ; [[ $CODENAME == jessie ]] && TR_repo_ver=2.84 ; [[ $CODENAME == stretch ]] && TR_repo_ver=2.92 ; }
-
-TR_latest_ver=$(wget -qO- https://github.com/transmission/transmission/releases | grep releases/tag | grep -Eo "[23]\.[0-9.]+" | head -1)
-[[ -z $TR_latest_ver ]] && TR_latest_ver=2.94
-
-clear
+[[ $DeBUG != 1 ]] && clear
 
 wget --no-check-certificate -t1 -T5 -qO- https://raw.githubusercontent.com/Aniverse/inexistence/files/logo/inexistence.logo.1
 
@@ -527,7 +506,7 @@ fi ; }
 
 
 # 询问用户名
-function ask_username(){ clear
+function ask_username(){ [[ $DeBUG != 1 ]] && clear
 
 validate_username $iUser
 
@@ -738,9 +717,9 @@ while [[ -z $qb_version ]]; do
         04 | 4) qb_version=4.1.3 ;;
         05 | 5) qb_version=4.1.6 ;;
         11) qb_version=4.2.0.alpha ;;
-        30) _input_version && qb_version="${input_version_num}"  ;;
-        40) qb_version='Install from repo' ;;
-        50) qb_version='Install from PPA' ;;
+        30) input_version && qb_version="${input_version_num}"  ;;
+        40) qb_version=repo ;;
+        50) qb_version=ppa ;;
         99) qb_version=No ;;
         * | "") qb_version=4.1.6 ;;
     esac
@@ -755,13 +734,13 @@ qBittorrent_4_2_0_later=No
 
 if [[ $qb_version == No ]]; then
     echo "${baizise}qBittorrent will ${baihongse}not${baizise} be installed${normal}"
-elif [[ $qb_version == "Install from repo" ]]; then
+elif [[ $qb_version == repo ]]; then
     sleep 0
-elif [[ $qb_version == "Install from PPA" ]]; then
+elif [[ $qb_version == ppa ]]; then
     if [[ $DISTRO == Debian ]]; then
         echo -e "${bailanse}${bold} ATTENTION ${normal} ${bold}Your distribution is ${green}Debian${jiacu}, which is not supported by ${green}Ubuntu${jiacu} PPA"
         echo -ne "Therefore "
-        qb_version='Install from repo'
+        qb_version=repo
     else
         echo "${bold}${baiqingse}qBittorrent $QB_latest_ver${normal} ${bold}$lang_will_be_installed from Stable PPA${normal}"
     fi
@@ -772,7 +751,7 @@ else
     echo -e "${bold}${baiqingse}qBittorrent ${qb_version}${normal} ${bold}$lang_will_be_installed${normal}"
 fi
 
-if [[ $qb_version == "Install from repo" ]]; then
+if [[ $qb_version == repo ]]; then
     echo "${bold}${baiqingse}qBittorrent $QB_repo_ver${normal} ${bold}$lang_will_be_installed from repository${normal}"
 fi
 
@@ -811,11 +790,11 @@ while [[ -z $de_version ]]; do
         03 | 3) de_version=1.3.14 ;;
         04 | 4) de_version=1.3.15 ;;
         11) de_version=2.0.dev ;;
-        30) _input_version && de_version="${input_version_num}" ;;
-        31) _input_version && de_version="${input_version_num}" && de_test=yes &&  de_branch=yes ;;
-        32) _input_version && de_version="${input_version_num}" && de_test=yes && de_version=yes ;;
-        40) de_version='Install from repo' ;;
-        50) de_version='Install from PPA' ;;
+        30) input_version && de_version="${input_version_num}" ;;
+        31) input_version && de_version="${input_version_num}" && de_test=yes &&  de_branch=yes ;;
+        32) input_version && de_version="${input_version_num}" && de_test=yes && de_version=yes ;;
+        40) de_version=repo ;;
+        50) de_version=ppa ;;
         99) de_version=No ;;
         * | "") de_version=1.3.15 ;;
     esac
@@ -827,13 +806,13 @@ done
 
 if [[ $de_version == No ]]; then
     echo "${baizise}Deluge will ${baihongse}not${baizise} be installed${normal}"
-elif [[ $de_version == "Install from repo" ]]; then 
+elif [[ $de_version == repo ]]; then 
     sleep 0
-elif [[ $de_version == "Install from PPA" ]]; then
+elif [[ $de_version == ppa ]]; then
     if [[ $DISTRO == Debian ]]; then
         echo -e "${bailanse}${bold} ATTENTION ${normal} ${bold}Your Linux distribution is ${green}Debian${jiacu}, which is not supported by ${green}Ubuntu${jiacu} PPA"
         echo -ne "Therefore "
-        de_version='Install from repo'
+        de_version=repo
     else
         echo "${bold}${baiqingse}Deluge $DE_latest_ver${normal} ${bold}$lang_will_be_installed from PPA${normal}"
     fi
@@ -845,7 +824,7 @@ else
 fi
 
 
-if [[ $de_version == "Install from repo" ]]; then 
+if [[ $de_version == repo ]]; then 
     echo "${bold}${baiqingse}Deluge $DE_repo_ver${normal} ${bold}$lang_will_be_installed from repository${normal}"
 fi
 
@@ -1179,12 +1158,12 @@ while [[ -z $tr_version ]]; do
             11) tr_version=2.92 && TRdefault=No ;;
             12) tr_version=2.93 && TRdefault=No ;;
             13) tr_version=2.94 && TRdefault=No ;;
-            30) _input_version && tr_version="${input_version_num}" ;;
-            31) _input_version && tr_version="${input_version_num}" && TRdefault=No ;;
-            40) tr_version='Install from repo' ;;
-            50) tr_version='Install from PPA' ;;
+            30) input_version && tr_version="${input_version_num}" ;;
+            31) input_version && tr_version="${input_version_num}" && TRdefault=No ;;
+            40) tr_version=repo ;;
+            50) tr_version=ppa ;;
             99) tr_version=No ;;
-            "" | *) tr_version='Install from repo';;
+            "" | *) tr_version=repo;;
     esac
 
 done
@@ -1192,13 +1171,13 @@ done
 if [[ $tr_version == No ]]; then
     echo "${baizise}Transmission will ${baihongse}not${baizise} be installed${normal}"
 else
-    if [[ $tr_version == "Install from repo" ]]; then 
+    if [[ $tr_version == repo ]]; then 
         sleep 0
-    elif [[ $tr_version == "Install from PPA" ]]; then
+    elif [[ $tr_version == ppa ]]; then
         if [[ $DISTRO == Debian ]]; then
           echo -e "${bailanse}${bold} ATTENTION ${normal} ${bold}Your Linux distribution is ${green}Debian${jiacu}, which is not supported by ${green}Ubuntu${jiacu} PPA"
           echo -ne "Therefore "
-          tr_version='Install from repo'
+          tr_version=repo
         else
           echo "${bold}${baiqingse}Transmission $TR_latest_ver ${normal} ${bold}$lang_will_be_installed from PPA${normal}"
         fi
@@ -1206,7 +1185,7 @@ else
         echo "${bold}${baiqingse}Transmission ${tr_version}${normal} ${bold}$lang_will_be_installed${normal}"
     fi
 
-    if [[ $tr_version == "Install from repo" ]]; then 
+    if [[ $tr_version == repo ]]; then 
         echo "${bold}${baiqingse}Transmission $TR_repo_ver${normal} ${bold}$lang_will_be_installed from repository${normal}"
     fi
 fi
@@ -1226,13 +1205,13 @@ while [[ -z $InsFlex ]]; do
     [[ $flex_installed == Yes ]] && echo -e "${bailanse}${bold} ATTENTION ${normal} ${blue}${bold}$lang_yizhuang flexget${normal}"
     read -ep "${bold}${yellow}$lang_would_you_like_to_install Flexget?${normal} [Y]es or [${cyan}N${normal}]o: " responce
     case $responce in
-        [yY] | [yY][Ee][Ss]  ) InsFlex=Yes ;;
-        [nN] | [nN][Oo] | "" ) InsFlex=No ;;
-        *) InsFlex=No ;;
+        [yY] | [yY][Ee][Ss]  ) InsFlex=yes ;;
+        [nN] | [nN][Oo] | "" ) InsFlex=no ;;
+        *) InsFlex=no ;;
     esac
 done
 
-if [ $InsFlex == Yes ]; then
+if [ $InsFlex == yes ]; then
     echo -e "${bold}${baiqingse}Flexget${normal} ${bold}$lang_will_be_installed${normal}\n"
 else
     echo -e "${baizise}Flexget will ${baihongse}not${baizise} be installed${normal}\n"
@@ -1250,13 +1229,13 @@ while [[ -z $InsRclone ]]; do
     [[ $rclone_installed == Yes ]] && echo -e "${bailanse}${bold} ATTENTION ${normal} ${blue}${bold}$lang_yizhuang rclone${normal}"
     read -ep "${bold}${yellow}$lang_would_you_like_to_install rclone?${normal} [Y]es or [${cyan}N${normal}]o: " responce
     case $responce in
-        [yY] | [yY][Ee][Ss]  ) InsRclone=Yes ;;
-        [nN] | [nN][Oo] | "" ) InsRclone=No  ;;
-        *) InsRclone=No ;;
+        [yY] | [yY][Ee][Ss]  ) InsRclone=yes ;;
+        [nN] | [nN][Oo] | "" ) InsRclone=no  ;;
+        *) InsRclone=no ;;
     esac
 done
 
-if [[ $InsRclone == Yes ]]; then
+if [[ $InsRclone == yes ]]; then
     echo -e "${bold}${baiqingse}rclone${normal} ${bold}$lang_will_be_installed${normal}\n"
 else
     echo -e "${baizise}rclone will ${baihongse}not${baizise} be installed${normal}\n"
@@ -1303,13 +1282,13 @@ function ask_wine_mono() {
 while [[ -z $InsWine ]]; do
     read -ep "${bold}${yellow}$lang_would_you_like_to_install wine and mono?${normal} [Y]es or [${cyan}N${normal}]o: " responce
     case $responce in
-        [yY] | [yY][Ee][Ss]  ) InsWine=Yes ;;
-        [nN] | [nN][Oo] | "" ) InsWine=No  ;;
-        *) InsWine=No ;;
+        [yY] | [yY][Ee][Ss]  ) InsWine=yes ;;
+        [nN] | [nN][Oo] | "" ) InsWine=no  ;;
+        *) InsWine=no ;;
     esac
 done
 
-if [[ $InsWine == Yes ]]; then
+if [[ $InsWine == yes ]]; then
     echo "${bold}${baiqingse}Wine${jiacu} and ${baiqingse}mono${jiacu} $lang_will_be_installed${normal}"
 else
     echo "${baizise}Wine or mono will ${baihongse}not${baizise} be installed${normal}"
@@ -1821,9 +1800,9 @@ function install_deluge() {
         [[ $de_branch  == yes ]] && bash <(wget -qO- ${repo}/raw/$iBranch/00.Installation/install/deluge/install) -b $de_version
     else
 
-if [[ $de_version == "Install from repo" ]]; then
+if [[ $de_version == repo ]]; then
     apt-get install -y deluge deluged deluge-web deluge-console deluge-gtk
-elif [[ $de_version == "Install from PPA" ]]; then
+elif [[ $de_version == ppa ]]; then
     add-apt-repository -y ppa:deluge-team/ppa
     apt-get update
     apt-get install -y deluge deluged deluge-web deluge-console deluge-gtk
@@ -1993,9 +1972,9 @@ cd ; echo -e "\n\n\n\n${baihongse}  FLOOD-INSTALLATION-COMPLETED  ${normal}\n\n\
 
 function install_transmission() {
 
-if [[ "${tr_version}" == "Install from repo" ]]; then
+if [[ "${tr_version}" == repo ]]; then
     apt-get install -y transmission-daemon
-elif [[ "${tr_version}" == "Install from PPA" ]]; then
+elif [[ "${tr_version}" == ppa ]]; then
     apt-get install -y software-properties-common
     add-apt-repository -y ppa:transmissionbt/ppa
     apt-get update
@@ -2341,7 +2320,7 @@ FXWEB=":6566" ; FDWEB=":3000"
 
 if [[ `  ps -ef | grep deluged | grep -v grep ` ]] && [[ `  ps -ef | grep deluge-web | grep -v grep ` ]] ; then destatus="${green}Running ${normal}" ; else destatus="${red}Inactive${normal}" ; fi
 Installation_FAILED="${bold}${baihongse} ERROR ${normal}"
-clear ; }
+[[ $DeBUG != 1 ]] && clear ; }
 
 
 function script_end() {
@@ -2390,9 +2369,9 @@ elif [[ $rt_version != No ]] && [[ $rt_installed == No  ]]; then
 fi
 
 # flexget 状态可能是 8 位字符长度的
-if   [[ $InsFlex != No ]] && [[ $flex_installed == Yes ]]; then
-     echo -e " ${cyan}Flexget WebUI${normal}       $flexget_status  http://${serveripv4}${FXWEB}" #${bold}(username is ${underline}flexget${reset_underline}${normal})
-elif [[ $InsFlex != No ]] && [[ $flex_installed == No  ]]; then
+if   [[ $InsFlex != no ]] && [[ $flex_installed == Yes ]]; then
+     echo -e " ${cyan}Flexget WebUI${normal}       $(_if_running flexget            )   http://${serveripv4}${FXWEB}"
+elif [[ $InsFlex != no ]] && [[ $flex_installed == No  ]]; then
      echo -e " ${red}Flexget WebUI${normal}       ${bold}${baihongse} ERROR ${normal}    ${bold}${red}Installation FAILED${normal}"
      FXFAILED=1 ; INSFAILED=1
 fi
@@ -2483,9 +2462,9 @@ lt_version=$lt_version" ; }
 fi
 
 if [[ $qb_version != No ]]; then
-    if [[ $qb_version == "Install from repo" ]]; then
+    if [[ $qb_version == repo ]]; then
         bash $local_packages/package/qbittorrent/install --logbase $LogTimes -m apt
-    elif [[ $qb_version == "Install from PPA" ]]; then
+    elif [[ $qb_version == ppa ]]; then
         bash $local_packages/package/qbittorrent/install --logbase $LogTimes -m ppa
     else
         bash $local_packages/package/qbittorrent/install --logbase $LogTimes -m source -v $qb_version
@@ -2506,12 +2485,12 @@ echo -ne "Installing rTorrent ... \n\n\n" ; install_rtorrent 2>&1 | tee $LogLoca
 echo -ne "Installing Transmission ... \n\n\n" ; install_transmission 2>&1 | tee $LogLocation/08.tr1.log
 echo -ne "Configuring Transmission ... " ; config_transmission 2>&1 | tee $LogLocation/09.tr2.log ; }
 
-[[ $InsFlex   == Yes ]]  && { bash $local_packages/package/flexget/install --logbase $LogTimes --system
-                              bash $local_packages/package/flexget/install --logbase $LogTimes --system -u $iUser -p $iPass -w 6566 ; }
-[[ $InsRclone == Yes ]]  && { bash $local_packages/package/rclone/install  --logbase $LogTimes ; }
-[[ $InsRDP    == VNC ]]  && { echo -ne "Installing VNC ... \n\n\n" ; install_vnc 2>&1 | tee $LogLocation/12.rdp.log ; }
-[[ $InsRDP    == X2Go ]] && { echo -ne "Installing X2Go ... \n\n\n" ; install_x2go 2>&1 | tee $LogLocation/12.rdp.log ; }
-[[ $InsWine   == Yes ]]  && { bash $local_packages/package/wine/install --logbase $LogTimes
+[[ $InsFlex   == yes ]]  && { bash $local_packages/package/flexget/install   --logbase $LogTimes --system
+                              bash $local_packages/package/flexget/configure --logbase $LogTimes --system -u $iUser -p $iPass -w 6566 ; }
+[[ $InsRclone == yes ]]  && { bash $local_packages/package/rclone/install    --logbase $LogTimes ; }
+[[ $InsRDP    == VNC ]]  && { echo -ne "Installing VNC ... \n\n\n" ; install_vnc 2>&1 | tee $LogLocation/12.vnc.log ; }
+[[ $InsRDP    == X2Go ]] && { echo -ne "Installing X2Go ... \n\n\n" ; install_x2go 2>&1 | tee $LogLocation/12.x2go.log ; }
+[[ $InsWine   == yes ]]  && { bash $local_packages/package/wine/install --logbase $LogTimes
                               bash $local_packages/package/mono/install --logbase $LogTimes ; }
 [[ $InsTools  == Yes ]]  && { echo -ne "Installing Uploading Toolbox ... \n\n\n" ; install_tools 2>&1 | tee $LogLocation/13.tool.log ; }
 [[ $UseTweaks == Yes ]]  && { echo -ne "Configuring system settings ... \n\n\n" ; system_tweaks ; }
