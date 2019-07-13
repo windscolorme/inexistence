@@ -2,27 +2,23 @@
 #
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
-script_update=2019.07.10
-script_version=r10022
-################################################################################################
 
-usage_guide() {
-bash <(wget -qO- https://github.com/Aniverse/inexistence/raw/master/00.Installation/package/deluge/install) -v 1.3.15
-bash /etc/inexistence/00.Installation/package/deluge/install -v 1.3.15
+script_update=2019.07.11
+script_version=r10023
+
+################################################################################################ Debug
+
+usage_for_debug() {
+    export local_packages=/etc/inexistence/00.Installation
+    rm -f $local_packages/package/deluge/install ; nano $local_packages/package/deluge/install
+    bash /etc/inexistence/00.Installation/package/deluge/install -v 1.3.15
+    bash <(wget -qO- https://github.com/Aniverse/inexistence/raw/master/00.Installation/package/deluge/install) -v 1.3.15
 }
 
-OutputLOG=/etc/inexistence/01.Log/install_deluge.txt    # /dev/null
-SCLocation=/etc/inexistence/01.Log/SourceCodes
-LOCKLocation=/etc/inexistence/01.Log/Lock
+################################################################################################ Get options
 
-if [[ ! -f /etc/inexistence/00.Installation/install/function ]] ; then
-    wget -q https://github.com/Aniverse/inexistence/raw/master/00.Installation/install/function -O /tmp/function
-    source /tmp/function
-else
-    source /etc/inexistence/00.Installation/install/function
-fi
-
-################################################################################################
+unset AppName AppNameLower Need_SourceCode pm_action \
+      LogRootPath LogTimes DebLocation SCLocation LOCKLocation OutputLOG
 
 function show_usage() { echo " Invalid option $1
 Usage:
@@ -32,7 +28,7 @@ Usage:
 "
 exit 1 ; }
 
-OPTS=$(getopt -o m:v:b: --long "mode:,version:,branch:" -- "$@")
+OPTS=$(getopt -o m:v:b: --long "mode:,version:,branch:,logbase:,debug" -- "$@")
 [ $? != 0 ] && show_usage
 eval set -- "$OPTS"
 
@@ -40,8 +36,26 @@ while [ -n "$1" ] ; do case "$1" in
     -m | --mode    ) mode="$2"     ; shift ; shift ;;
     -v | --version ) version="$2"  ; shift ; shift ;;
     -b | --branch  ) branch="$2"   ; shift ; shift ;;
-    -- ) shift ; break ;;
+         --logbase      ) LogTimes="$2" ; shift 2 ;;
+         --debug        ) debug=1       ; shift   ;;
+         --             ) shift         ; break   ;;
 esac ; done
+
+################################################################################################ Set Variables
+
+AppName=Deluge
+AppNameLower=deluge
+Need_SourceCode=yes
+pm_action=install
+
+if [[ -f /etc/inexistence/00.Installation/function ]]; then
+    source /etc/inexistence/00.Installation/function
+else
+    wget -qO /tmp/function https://github.com/Aniverse/inexistence/raw/master/00.Installation/function
+    source /tmp/function
+fi
+
+set_variables_log_location
 
 ################################################################################################
 
@@ -80,6 +94,9 @@ case $mode in
     alt     ) sleep 0  ;;
     ""   | *) echo -e "\n${CW} Installation mode must be specified as apt, ppa, source or alt${normal}\n"   ;;
 esac
+
+################################################################################################
+
 
 
 
@@ -256,3 +273,5 @@ esac
 
 cd
 check_status de
+
+[[ $LogTimes == none ]] && rm -rf /tmp/ttmmpp
