@@ -4,7 +4,7 @@
 # Author: Aniverse
 #
 script_update=2019.07.13
-script_version=r10024
+script_version=r10025
 ################################################################################################ Usage Guide
 
 usage_guide() {
@@ -176,8 +176,17 @@ PortCheck2()    { while ss -ln | grep ':'$portGen2'' | grep -q LISTEN ; do PortG
 
 
 
-
-
+function check_remote_git_repo_branch() {
+    local git_repo=$1
+    local git_branch=$2
+    [[ -z $git_repo ]] && { echo -e "${CW} No git_repo input!${normal}" ; rm -f /tmp/.lt.git.tag ; exit 1 ; }
+    [[ -z $git_branch ]] && { echo -e "${CW} No git_branch input!${normal}" ; rm -f /tmp/.lt.git.tag ; exit 1 ; }
+    rm -f /tmp/.lt.git.tag
+    git ls-remote --tags  $git_repo | awk '{print $NF}' >> /tmp/.lt.git.tag
+    git ls-remote --heads $git_repo | awk '{print $NF}' >> /tmp/.lt.git.tag
+    grep $git_branch /tmp/.lt.git.tag -q || { echo -e "${CW} No such branch!${normal}" ; rm -f /tmp/.lt.git.tag ; exit 1 ; }
+    rm -f /tmp/.lt.git.tag
+}
 
 
 
