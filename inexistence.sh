@@ -16,7 +16,7 @@ export PATH
 SYSTEMCHECK=1
 DeBUG=0
 script_lang=eng
-INEXISTENCEVER=1.1.3.3
+INEXISTENCEVER=1.1.3.4
 INEXISTENCEDATE=2019.07.13
 default_branch=master
 # --------------------------------------------------------------------------------
@@ -2436,6 +2436,9 @@ ask_password
 ask_apt_sources
 [[ -z $MAXCPUS ]] && MAXCPUS=$(nproc) ; ask_multi_threads
 ask_swap
+
+bash $local_packages/package/qbittorrent/ask  # test
+
 ask_qbittorrent
 ask_deluge
 [[ $de_version != No || $qb_version != No ]] && ask_libtorrent_version
@@ -2481,7 +2484,7 @@ fi
 
 if [[ $qb_version != No ]]; then
     if [[ $qb_version == "Install from repo" ]]; then
-        bash $local_packages/package/qbittorrent/install --logbase $LogTimes -m apt 
+        bash $local_packages/package/qbittorrent/install --logbase $LogTimes -m apt
     elif [[ $qb_version == "Install from PPA" ]]; then
         bash $local_packages/package/qbittorrent/install --logbase $LogTimes -m ppa
     else
