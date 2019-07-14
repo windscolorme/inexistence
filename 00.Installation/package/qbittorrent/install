@@ -4,7 +4,7 @@
 # Author: Aniverse
 
 script_update=2019.07.14
-script_version=r10003
+script_version=r10004
 
 ################################################################################################ Debug
 
@@ -176,6 +176,7 @@ function compile_qbittorrent() {
 
     ./configure $compile_flag --prefix=/usr >> $OutputLOG 2>&1
     make $compile_flag_threads >> $OutputLOG 2>&1
+    rm -rf $SCLocation/tmp-$AppNameLower
     make install INSTALL_ROOT=$SCLocation/tmp-$AppNameLower >> $OutputLOG 2>&1
   # make install >> $OutputLOG 2>&1
 

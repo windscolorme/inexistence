@@ -4,7 +4,7 @@
 # Author: Aniverse
 #
 script_update=2019.07.14
-script_version=r11046
+script_version=r11047
 
 ################################################################################################ Debug
 
@@ -51,6 +51,7 @@ esac ; done
 
 AppName=libtorrent-rasterbar
 AppNameLower=libtorrent-rasterbar
+DebName=libtorrent-rasterbar
 Need_SourceCode=yes
 pm_action=install
 
@@ -163,8 +164,9 @@ function install_lt_source() {
     mv $SCLocation/tmp-libtorrent-rasterbar/usr/local/lib/python2.7/site-packages  $SCLocation/tmp-libtorrent-rasterbar/usr/local/lib/python2.7/dist-packages
 
     if [[ -n $(which fpm) ]]; then
-        fpm -f -C $SCLocation/tmp-$AppNameLower -s dir -t deb -n $AppNameLower --version $version \
-            -p $DebLocation/$AppNameLower-$version-$CODENAME-$arch.deb \
+        fpm -C $SCLocation/tmp-$AppNameLower -n $DebName -v $version \
+            -p $DebLocation/$DebName-$version-$CODENAME-$arch.deb \
+            -s dir -t deb -a native -m aniverse -f \
             --description "an efficient feature complete C++ bittorrent implementation, installed by inexistence" >> $OutputLOG 2>&1
         dpkg -i $DebLocation/$AppNameLower-$version-$CODENAME-$arch.deb >> $OutputLOG 2>&1 && touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock
     else
