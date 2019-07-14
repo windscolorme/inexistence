@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 #
-script_update=2019.07.13
-script_version=r11045
+script_update=2019.07.14
+script_version=r11046
 
 ################################################################################################ Debug
 
@@ -12,9 +12,9 @@ usage_for_me() {
     export local_packages=/etc/inexistence/00.Installation
     export s=$local_packages/package/libtorrent-rasterbar/install
     rm -f $s ; nano $s
-    bash $s -m deb2 --logbase $LogTimes
-    bash <(wget -qO- https://github.com/Aniverse/inexistence/raw/master/00.Installation/libtorrent-rasterbar/install) -m deb2
-    bash <(wget -qO- https://github.com/Aniverse/inexistence/raw/master/00.Installation/libtorrent-rasterbar/install) -b RC_1_2
+    bash $s -m deb2         --logbase $LogTimes
+    bash <(wget -qO- https://github.com/Aniverse/inexistence/raw/master/00.Installation/package/libtorrent-rasterbar/install) -m deb2
+    bash <(wget -qO- https://github.com/Aniverse/inexistence/raw/master/00.Installation/package/libtorrent-rasterbar/install) -b RC_1_2
 }
 
 ################################################################################################ Get options
@@ -75,22 +75,17 @@ trap cancel SIGINT
 [[ -z $mode ]] && [[ -n $branch  ]] && mode=source
 [[ -z $mode ]] && echo -e "\n${CW} Installation mode must be specified as apt, deb, deb2, deb3 or source${normal}\n" && cancel
 
-[[ -z $MAXCPUS ]] && MAXCPUS=$(nproc)
-
 # Transform version to branch (used for git clone tag)
 echo $version | grep -qEo "[012]\.[0-9]+\.[0-9]+" && branch=$( echo libtorrent-$version | sed "s/\./_/g" )
-[[ $version == 1.1.11 ]] && branch=libtorrent_1_1_11
+[[ $version == 1.1.11 ]] && branch=libtorrent_1_1_11 # So why can't you name these tags in the same format，Arvid Norberg?
 [[ $version == 1.1.12 ]] && branch=libtorrent_1_1_12
 [[ $version == 1.2.0  ]] && branch=libtorrent_1_2_0
 
 [[ $mode == source ]] && [[ -z $branch ]] && { echo -e "\n${JG} No branch of libtorrent-rasterbar detected, force to use RC_1_1 branch ${normal}\n" ; branch=RC_1_1 ; version=1.1.13 ;  }
-[[ $debug == 1 ]] && echo -e "version=$version, branch=$branch, SCLocation=$SCLocation"
-
 [[ -n $branch ]] && check_remote_git_repo_branch  $git_repo  $branch
 
 # Use RC_1_1 if not specified
 [[ -z $branch ]] && branch=RC_1_1
-
 # Use 6.6.6 when version cannot be determind
 [[ -n $branch ]] && [[ -z $version ]] && version=$( wget -qO- $git_repo/raw/$branch/include/libtorrent/version.hpp | grep LIBTORRENT_VERSION | tail -n1 | grep -oE "[0-9.]+\"" | sed "s/.0\"//" )
 [[ -n $branch ]] && [[ -z $version ]] && version=6.6.6
