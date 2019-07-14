@@ -4,7 +4,7 @@
 # Author: Aniverse
 
 script_update=2019.07.14
-script_version=r10002
+script_version=r10003
 
 ################################################################################################ Debug
 
@@ -12,7 +12,8 @@ usage_for_debug() {
     export local_packages=/etc/inexistence/00.Installation
     export s=$local_packages/package/qbittorrent/install
     rm -f $s ; nano $s
-    bash $s -m apt        --logbase $LogTimes
+    bash $s -v 4.1.6        --logbase $LogTimes
+    bash <(wget -qO- https://github.com/Aniverse/inexistence/raw/master/00.Installation/package/qbittorrent/install) -v 4.1.6
 }
 
 ################################################################################################ Get options
@@ -44,7 +45,7 @@ while [ -n "$1" ] ; do case "$1" in
          --             ) shift         ; break   ;;
 esac ; done
 
-################################################################################################ Set Variables
+################################################################################################ Set Variables 1
 
 AppName=qBittorrent
 AppNameLower=qbittorrent
@@ -61,6 +62,8 @@ fi
 
 set_variables_log_location
 [[ $debug == 1 ]] && debug_log_location
+
+################################################################################################ Set Variables 2
 
 git_repo="https://github.com/qbittorrent/qBittorrent"
 lt_version=$(pkg-config --exists --print-errors "libtorrent-rasterbar >= 3.0.0" 2>&1 | awk '{print $NF}' | grep -oE [0-9.]+)
@@ -108,7 +111,6 @@ function install_qbittorrent_ppa() {
 
 function install_qbittorrent_dependencies() {
     echo >> $OutputLOG
-    [[ -z $lt_version ]] && { echo -e "${CW} No libtorrnt-rasterbar found${normal}" ; exit 1 ; }
 
     if version_ge $version 4.2.0 ; then
         qt_required_version=5.9.0
@@ -232,7 +234,8 @@ case $mode in
               check_status | tee -a $OutputLOG
               ;;
 
-    source  ) if [[ ! -f $LOCKLocation/$AppNameLower.dependencies.lock ]]; then
+    source  ) [[ -z $lt_version ]] && echo -e "${CW} No libtorrnt-rasterbar found${normal}" && exit 1
+              if [[ ! -f $LOCKLocation/$AppNameLower.dependencies.lock ]]; then
                   echo -ne "Installing $AppName build dependencies ..." | tee -a $OutputLOG
                   install_qbittorrent_dependencies & spinner $!
                   check_status $status_lock
