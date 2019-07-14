@@ -6,7 +6,7 @@
 # Thanks to amefs
 
 script_update=2019.07.14
-script_version=r10003
+script_version=r10004
 
 ################################################################################################ Debug
 
@@ -176,11 +176,12 @@ After=network.target
 Type=simple
 User=%I
 UMask=000
-PIDFile=/run/flexget.pid
 ExecStart=$flexget_cmd -c /home/%i/.config/flexget/config.yml daemon start
 ExecStartPre=/bin/rm -f /home/%i/.config/flexget/.config-lock
-ExecStop=/bin/kill -9 \$(cat /run/flexget.pid)
+ExecStop=/usr/bin/pkill -9 flexget
 ExecReload=$flexget_cmd -c /home/%i/.config/flexget/config.yml daemon reload
+TimeoutStartSec=10
+TimeoutStopSec=5
 
 #Group=%I
 #WorkingDirectory=/home/%i/.config/flexget/

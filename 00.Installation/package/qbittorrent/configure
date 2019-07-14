@@ -4,7 +4,7 @@
 # Author: Aniverse
 #
 script_update=2019.07.14
-script_version=r11012
+script_version=r11013
 
 ################################################################################################ Debug
 
@@ -79,13 +79,13 @@ After=network.target
 #UMask=000
 Type=forking
 User=%I
-PIDFile=/run/qbittorrent-nox-%I.pid
+
 LimitNOFILE=infinity
 ExecStart=/usr/bin/qbittorrent-nox -d
-#ExecStop=/usr/bin/killall -w -s 9 /usr/bin/qbittorrent-nox
-ExecStop=/bin/kill -9 \$(cat /run/qbittorrent-nox-%I.pid)
+ExecStop=/usr/bin/pkill -9 qbittorrent-nox
 Restart=on-failure
-TimeoutSec=300
+TimeoutStartSec=15
+TimeoutStopSec=5
 
 [Install]
 WantedBy=multi-user.target
@@ -99,8 +99,8 @@ systemctl daemon-reload
 
     mkdir -p $iHome/qbittorrent/{download,torrent,watch}   $iHome/.config/qBittorrent
 
-    cp -f $local_packages/package/qbittorrent/qb /usr/local/bin/qb
-    chmod 755 /usr/local/bin/qb
+    cp -f $local_packages/package/qbittorrent/qb /usr/local/bin/qb >> $OutputLOG 2>&1
+    chmod 755 /usr/local/bin/qb >> $OutputLOG 2>&1
 
     qbPass=$(echo -n $iPass | md5sum | cut -f1 -d ' ')
     cat > $iHome/.config/qBittorrent/qBittorrent.conf << EOF
