@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 
-script_update=2019.07.13
-script_version=r10001
+script_update=2019.07.14
+script_version=r10002
 
 ################################################################################################ Debug
 
@@ -48,6 +48,7 @@ esac ; done
 
 AppName=qBittorrent
 AppNameLower=qbittorrent
+DebName=qbittorrent-nox
 Need_SourceCode=yes
 pm_action=install
 
@@ -145,13 +146,14 @@ function install_qbittorrent_dependencies() {
 function compile_qbittorrent() {
     echo >> $OutputLOG
     rm -rf qBittorrent-$version
-    git clone https://github.com/qbittorrent/qBittorrent qBittorrent-$version >> $OutputLOG 2>&1
-    cd qBittorrent-$version
 
-    if [[ $version == 4.3.0 ]]; then
-        git checkout master >> $OutputLOG 2>&1
+    if [[ $version == 4.3.0 ]]; then # do not ask me why it's 4.3.0
+        git clone --depth=1 -b master https://github.com/qbittorrent/qBittorrent qBittorrent-$version >> $OutputLOG 2>&1
+        cd qBittorrent-$version
     elif [[ $version == 3.3.11.1 ]]; then
         # Add skip hash check function for 3.3.11
+        git clone https://github.com/qbittorrent/qBittorrent qBittorrent-$version >> $OutputLOG 2>&1
+        cd qBittorrent-$version
         git checkout release-3.3.11 >> $OutputLOG 2>&1
         git config --global user.email "you@example.com" >> $OutputLOG 2>&1
         git config --global user.name "Your Name" >> $OutputLOG 2>&1
@@ -159,27 +161,32 @@ function compile_qbittorrent() {
         git cherry-pick b271fa9 >> $OutputLOG 2>&1
     elif [[ $version == 4.1.2 ]]; then
         # Fix Webui cannot be reached
-        git checkout release-$qb_version >> $OutputLOG 2>&1
+        git clone https://github.com/qbittorrent/qBittorrent qBittorrent-$version >> $OutputLOG 2>&1
+        cd qBittorrent-$version
+        git checkout release-$version >> $OutputLOG 2>&1
         git config --global user.email "you@example.com" >> $OutputLOG 2>&1
         git config --global user.name "Your Name" >> $OutputLOG 2>&1
         git cherry-pick 262c3a7 >> $OutputLOG 2>&1
     else
-        git checkout release-$version >> $OutputLOG 2>&1
+        git clone --depth=1 -b release-$version https://github.com/qbittorrent/qBittorrent qBittorrent-$version >> $OutputLOG 2>&1
+        cd qBittorrent-$version
     fi
 
-    ./configure --prefix=/usr $compile_flag >> $OutputLOG 2>&1
-    make -j$MAXCPUS >> $OutputLOG 2>&1
-    make install DESTDIR=$SCLocation/tmp-$AppNameLower  >> $OutputLOG 2>&1
+    ./configure $compile_flag --prefix=/usr >> $OutputLOG 2>&1
+    make $compile_flag_threads >> $OutputLOG 2>&1
+    make install INSTALL_ROOT=$SCLocation/tmp-$AppNameLower >> $OutputLOG 2>&1
+  # make install >> $OutputLOG 2>&1
 
     status_lock=$AppNameLower
     echo "status_lock=$status_lock" > /tmp/Variables
     rm -f /tmp/$status_lock.1.lock /tmp/$status_lock.2.lock
 
     if [[ -n $(which fpm) ]]; then
-        fpm -f -C $SCLocation/tmp-$AppNameLower -s dir -t deb -n $AppNameLower --version $version \
-            -p $DebLocation/$AppNameLower-$version-$CODENAME-$arch.deb \
-            --description "bittorrent client based on libtorrent-rasterbar (without X support), installed by inexistence" >> $OutputLOG 2>&1
-        dpkg -i $DebLocation/$AppNameLower-$version-$CODENAME-$arch.deb >> $OutputLOG 2>&1 # && touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock
+        fpm -C $SCLocation/tmp-$AppNameLower -n $DebName -v $version \
+            -p $DebLocation/$DebName-$version-$CODENAME-$arch.deb \
+            -s dir -t deb -a native -m aniverse -f \
+            --description "qBittorrent client (without X support), installed by inexistence" >> $OutputLOG 2>&1
+        dpkg -i $DebLocation/$DebName-$version-$CODENAME-$arch.deb >> $OutputLOG 2>&1 # && touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock
     else
         make install >> $OutputLOG 2>&1 # && touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock
     fi
