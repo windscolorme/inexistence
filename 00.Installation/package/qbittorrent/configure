@@ -4,7 +4,7 @@
 # Author: Aniverse
 #
 script_update=2019.07.14
-script_version=r11011
+script_version=r11012
 
 ################################################################################################ Debug
 
@@ -83,7 +83,7 @@ PIDFile=/run/qbittorrent-nox-%I.pid
 LimitNOFILE=infinity
 ExecStart=/usr/bin/qbittorrent-nox -d
 #ExecStop=/usr/bin/killall -w -s 9 /usr/bin/qbittorrent-nox
-ExecStop=/bin/kill -9 $(cat /run/qbittorrent-nox-%I.pid)
+ExecStop=/bin/kill -9 \$(cat /run/qbittorrent-nox-%I.pid)
 Restart=on-failure
 TimeoutSec=300
 

@@ -6,7 +6,7 @@
 # Thanks to amefs
 
 script_update=2019.07.14
-script_version=r10001
+script_version=r10002
 
 ################################################################################################ Debug
 
@@ -27,7 +27,7 @@ unset AppName AppNameLower Need_SourceCode pm_action \
 
 function show_usage() { echo " Invalid option $1" ; exit 1 ; }
 
-OPTS=$(getopt -o u:p:l:w:d --long user:,password:,debug,logbase:wport:,system,single -- "$@")
+OPTS=$(getopt -o u:p:l:w:d --long user:,password:,debug,logbase:,wport:,system,single -- "$@")
 [ ! $? = 0 ] && show_usage
 eval set -- "$OPTS"
 
@@ -179,7 +179,7 @@ UMask=000
 PIDFile=/run/flexget.pid
 ExecStart=$flexget_cmd -c /home/%i/.config/flexget/config.yml daemon start
 ExecStartPre=/bin/rm -f /home/%i/.config/flexget/.config-lock
-ExecStop=/bin/kill -9 $(cat /run/flexget.pid)
+ExecStop=/bin/kill -9 \$(cat /run/flexget.pid)
 ExecReload=$flexget_cmd -c /home/%i/.config/flexget/config.yml daemon reload
 
 #Group=%I
