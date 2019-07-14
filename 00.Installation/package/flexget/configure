@@ -6,7 +6,7 @@
 # Thanks to amefs
 
 script_update=2019.07.14
-script_version=r10002
+script_version=r10003
 
 ################################################################################################ Debug
 
@@ -59,7 +59,7 @@ fi
 set_variables_log_location
 [[ $debug == 1 ]] && debug_log_location
 
-[[ -z $mode ]] && { echo -e "ERROR: Please specify mode" ; exit 1 ; }
+[[ -z $mode ]] && mode=system
 [[ -z $iUser || -z $iPass ]] && { echo -e "ERROR: Please specify username and password!" ; exit 1 ; }
 id -u $iUser >/dev/null 2>&1 || { echo -e "ERROR: User $iUser doesn't exist!" ; exit 1 ; }
 [[ -z $iHome ]] && [[ $iUser == root ]] && iHome=/root
@@ -155,7 +155,7 @@ tasks:
 web_server:
   port: $wPort
   web_ui: yes
-# This is prepared for reverse proxy, do not uncomment it unless you know how it works
+  run_v2: yes
 # base_url: /flexget
 
 # schedules is disabled by default, you need to enable it or use cron to RSS
