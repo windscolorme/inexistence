@@ -16,7 +16,7 @@ export PATH
 SYSTEMCHECK=1
 DeBUG=0
 script_lang=eng
-INEXISTENCEVER=1.1.3.8
+INEXISTENCEVER=1.1.3.9
 INEXISTENCEDATE=2019.07.14
 default_branch=master
 # --------------------------------------------------------------------------------
@@ -116,7 +116,7 @@ CW="${bold}${baihongse} ERROR ${jiacu}";ZY="${baihongse}${bold} ATTENTION ${jiac
 _colors
 # --------------------------------------------------------------------------------
 
-function swap_on()  { dd if=/dev/zero of=/etc/.swapfile bs=1M count=4096;mkswap /etc/.swapfile;swapon /etc/.swapfile;swapon -s; }
+function swap_on()  { dd if=/dev/zero of=/etc/.swapfile bs=1M count=2048;mkswap /etc/.swapfile;swapon /etc/.swapfile;swapon -s; }
 function swap_off() { swapoff /etc/.swapfile;rm -f /etc/.swapfile; }
 
 # 用于退出脚本
@@ -661,12 +661,12 @@ echo ; }
 
 function ask_swap() {
 
-[[ -d /proc/vz ]] && [[ $tram -le 3072 ]] && {
+[[ -d /proc/vz ]] && [[ $tram -le 2048 ]] && {
 echo -e "${JG} You're using OpenVZ VPS and your RAM is less than 2GB\nYour memory may got exhausted sometimes when running this script\n"
 USESWAP=OpenVZ ; }
 
-if [[ -z $USESWAP ]] && [[ $tram -le 3072 ]]; then
-    echo -e  "${bold}${red}$lang_note_that${normal} ${bold}Your RAM is below ${red}3072MB${jiacu}, memory may got exhausted when compiling${normal}"
+if [[ -z $USESWAP ]] && [[ $tram -le 2048 ]]; then
+    echo -e  "${bold}${red}$lang_note_that${normal} ${bold}Your RAM is below ${red}2GB${jiacu}, memory may got exhausted when compiling${normal}"
     read -ep "${bold}${yellow}Would you like to use swap when compiling?${normal} [${cyan}Y${normal}]es or [N]o: " version
     case $responce in
         [yY] | [yY][Ee][Ss] | "") USESWAP=Yes ;;
@@ -674,7 +674,7 @@ if [[ -z $USESWAP ]] && [[ $tram -le 3072 ]]; then
         *                       ) USESWAP=Yes ;;
     esac
     if [[ $USESWAP == Yes ]]; then
-        echo -e "${bold}${baiqingse} 4GB Swap ${normal} will be used\n"
+        echo -e "${bold}${baiqingse} 2GB Swap ${normal} will be used\n"
     else
         echo -e "${bold}Swap will not be used${normal}\n"
     fi
@@ -2443,19 +2443,13 @@ mv /etc/00.preparation.log $LogLocation/00.preparation.log
 
 if [[ -n $lt_version ]] && [[ $lt_version != system ]]; then
     [[ $DeBUG == 1 ]] && {
-echo "Deluge_2_later=$Deluge_2_later   qBittorrent_4_2_0_later=$qBittorrent_4_2_0_later
-lt_ver=$lt_ver  lt8_support=$lt8_support  lt_ver_qb3_ok=$lt_ver_qb3_ok  lt_ver_de2_ok=$lt_ver_de2_ok
-lt_version=$lt_version" ; }
+        echo "Deluge_2_later=$Deluge_2_later   qBittorrent_4_2_0_later=$qBittorrent_4_2_0_later
+        lt_ver=$lt_ver  lt8_support=$lt8_support  lt_ver_qb3_ok=$lt_ver_qb3_ok  lt_ver_de2_ok=$lt_ver_de2_ok
+        lt_version=$lt_version" ; }
     if   [[ $lt_version == RC_1_0 ]]; then
         bash $local_packages/package/libtorrent-rasterbar/install --logbase $LogTimes -m deb
     elif [[ $lt_version == RC_1_1 ]]; then
-        if [[ $CODENAME == buster ]]; then
-            bash $local_packages/package/libtorrent-rasterbar/install --logbase $LogTimes -b RC_1_1
-        else
-            bash $local_packages/package/libtorrent-rasterbar/install --logbase $LogTimes -m deb2
-        fi
-    elif [[ $lt_version == RC_1_2 ]]; then
-        bash $local_packages/package/libtorrent-rasterbar/install --logbase $LogTimes -b RC_1_2
+        bash $local_packages/package/libtorrent-rasterbar/install --logbase $LogTimes -m deb2
     else
         bash $local_packages/package/libtorrent-rasterbar/install --logbase $LogTimes -v $lt_version
     fi
