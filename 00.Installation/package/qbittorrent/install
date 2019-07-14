@@ -4,7 +4,7 @@
 # Author: Aniverse
 
 script_update=2019.07.14
-script_version=r10004
+script_version=r11005
 
 ################################################################################################ Debug
 
@@ -69,10 +69,10 @@ git_repo="https://github.com/qbittorrent/qBittorrent"
 lt_version=$(pkg-config --exists --print-errors "libtorrent-rasterbar >= 3.0.0" 2>&1 | awk '{print $NF}' | grep -oE [0-9.]+)
 
 [[ -z $mode ]] && [[ -n $version ]] && mode=source
-check_remote_git_repo_branch  $git_repo  "release-$version"
+[[ -n $version ]] && check_remote_git_repo_branch  $git_repo  "release-$version"
 [[ ! $mode =~ (apt|ppa|source) ]] && echo -e "${CW} Mode can only be specified as apt, ppa or source${normal}" && exit 1
 [[ $mode == ppa ]] && [[ $DISTRO != Ubuntu ]] && echo -e "${normal}PPA is not support for $DISTRO, change installation mode from ppa to apt" && mode=apt
-[[ $mode == apt ]] && grep qbittorrent -q /etc/apt/sources.list && echo -e "${normal}qBittorrent PPA detected, change installation mode from apt to ppa" && mode=ppa
+# [[ $mode == apt ]] && grep qbittorrent -q /etc/apt/sources.list && echo -e "${normal}qBittorrent PPA detected, change installation mode from apt to ppa" && mode=ppa
 
 [[ -z $type ]] && type=headless
 [[ ! $type =~ (headless|desktop) ]] && echo -e "${CW} Type can only be specified as headless or desktop${normal}" && exit 1
@@ -118,19 +118,41 @@ function install_qbittorrent_dependencies() {
         qt_required_version=5.5.1
     fi
 
+    # https://launchpad.net/~ubuntu-toolchain-r/+archive/ubuntu/ppa
+    # https://launchpad.net/~ubuntu-toolchain-r/+archive/ubuntu/test
+    # https://launchpad.net/~beineri/+archive/ubuntu/opt-qt597-trusty
+    # https://launchpad.net/~beineri/+archive/ubuntu/opt-qt597-xenial
     if [[ $CODENAME == jessie ]]; then
-        apt-get purge -y qtbase5-dev qttools5-dev-tools libqt5svg5-dev >> $OutputLOG 2>&1
-        apt-get autoremove -y >> $OutputLOG 2>&1
-        apt-get install -y libgl1-mesa-dev >> $OutputLOG 2>&1
-        wget -nv https://github.com/Aniverse/inexistence/raw/files/debian.package/qt.5.5.1.jessie.amd64.deb -O qt.5.5.1.jessie.amd64.deb >> $OutputLOG 2>&1
-        dpkg -i qt.5.5.1.jessie.amd64.deb >> $OutputLOG 2>&1
-        rm -f qt.5.5.1.jessie.amd64.deb
-        export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/Qt-5.5.1/lib/pkgconfig
-        export PATH=/usr/local/Qt-5.5.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-        qmake --version >> $OutputLOG 2>&1
-    else
-        apt-get install -y qtbase5-dev qttools5-dev-tools libqt5svg5-dev >> $OutputLOG 2>&1 &&
-        touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock
+        cat << EOF > /etc/apt/sources.list.d/qt.5.9.list
+deb http://ppa.launchpad.net/beineri/opt-qt597-trusty/ubuntu trusty main
+deb-src http://ppa.launchpad.net/beineri/opt-qt597-trusty/ubuntu trusty main
+EOF
+        cat << EOF > /etc/apt/sources.list.d/toolchain.list
+deb http://ppa.launchpad.net/ubuntu-toolchain-r/ppa/ubuntu trusty main
+deb-src http://ppa.launchpad.net/ubuntu-toolchain-r/ppa/ubuntu trusty main
+EOF
+        apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 10C56D0DE9977759 1E9377A2BA9EF27F
+        apt-get update
+        apt-get install -y qt59base qt59svg qt59tools gcc-9 g++-9
+        cd /usr/bin
+        for gcc in gcc g++ gcc-ranlib gcc-ar gcc-nm gcov ; do
+           rm -f $gcc
+           ln -s x86_64-linux-gnu-${gcc}-9 $gcc
+        done
+        export PATH=/opt/qt59/bin:$PATH
+        export PKG_CONFIG_PATH=/opt/qt59/lib/pkgconfig:$PKG_CONFIG_PATH
+    elif [[ $CODENAME =~ (xenial|stretch) ]]; then
+        cat << EOF > /etc/apt/sources.list.d/qt.5.9.list
+deb http://ppa.launchpad.net/beineri/opt-qt597-xenial/ubuntu xenial main
+deb-src http://ppa.launchpad.net/beineri/opt-qt597-xenial/ubuntu xenial main
+EOF
+        apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 10C56D0DE9977759
+        apt-get update
+        apt-get install -y qt59base qt59svg qt59tools
+        export PATH=/opt/qt59/bin:$PATH
+        export PKG_CONFIG_PATH=/opt/qt59/lib/pkgconfig:$PKG_CONFIG_PATH
+    elif [[ $CODENAME =~ (bionic|buster) ]]; then
+        apt-get install -y qtbase5-dev qttools5-dev-tools libqt5svg5-dev
     fi
 
     status_lock=$AppNameLower-d
@@ -149,7 +171,7 @@ function compile_qbittorrent() {
     echo >> $OutputLOG
     rm -rf qBittorrent-$version
 
-    if [[ $version == 4.3.0 ]]; then # do not ask me why it's 4.3.0
+    if [[ $version == 4.2.0 ]]; then
         git clone --depth=1 -b master https://github.com/qbittorrent/qBittorrent qBittorrent-$version >> $OutputLOG 2>&1
         cd qBittorrent-$version
     elif [[ $version == 3.3.11.1 ]]; then
@@ -257,10 +279,36 @@ esac
 
 function deprecated_codes() {
 
+https://github.com/qbittorrent/qBittorrent/blob/master/.travis.yml
+https://launchpad.net/~beineri
+https://launchpad.net/~beineri/+archive/ubuntu/opt-qt59-xenial
+https://launchpad.net/~beineri/+archive/ubuntu/opt-qt595-xenial
+https://launchpad.net/~beineri/+archive/ubuntu/opt-qt597-xenial
+https://launchpad.net/~beineri/+archive/ubuntu/opt-qt597-trusty
+[qt59base, qt59svg, qt59tools]
+
+
+
+
+
     if [[ -n $(which checkinstalll) ]]; then
         apt-cache show libtorrent-rasterbar | grep inexistence -q && dpkg -r libtorrent-rasterbar
         mkdir -p doc-pak && echo "qBittorrent BitTorrent client headless (qbittorrent-nox)" > description-pak
         checkinstall -y --pkgname=qbittorrent-nox --pkgversion=$version --pkggroup qbittorrent >> $OutputLOG 2>&1
+    fi
+
+    if [[ $CODENAME == jessie ]]; then
+        apt-get purge -y qtbase5-dev qttools5-dev-tools libqt5svg5-dev >> $OutputLOG 2>&1
+        apt-get autoremove -y >> $OutputLOG 2>&1
+        apt-get install -y libgl1-mesa-dev >> $OutputLOG 2>&1
+        wget -nv https://github.com/Aniverse/inexistence/raw/files/debian.package/qt.5.5.1.jessie.amd64.deb -O qt.5.5.1.jessie.amd64.deb >> $OutputLOG 2>&1
+        dpkg -i qt.5.5.1.jessie.amd64.deb >> $OutputLOG 2>&1
+        rm -f qt.5.5.1.jessie.amd64.deb
+        export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/Qt-5.5.1/lib/pkgconfig
+        export PATH=/usr/local/Qt-5.5.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        qmake --version >> $OutputLOG 2>&1
+    else
+        apt-get install -y qtbase5-dev qttools5-dev-tools libqt5svg5-dev >> $OutputLOG 2>&1
     fi
 
 }
