@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 #
-script_update=2019.07.03
-script_version=r20005
+script_update=2019.07.15
+script_version=r20006
 ################################################################################################
 
 usage_guide() {
@@ -50,7 +50,7 @@ CODENAME=$(cat /etc/os-release | grep VERSION= | tr '[A-Z]' '[a-z]' | sed 's/\"\
 [[ $DDDISTRO == Ubuntu ]] && osversion=`  grep Ubuntu /etc/issue | head -1 | grep -oE  "[0-9.]+"  `
 [[ $DDDISTRO == Debian ]] && osversion=`  cat /etc/debian_version  `
 [[ $CCCODENAME =~ (xenial|bionic|jessie|stretch) ]] && SysSupport=1
-[[ -f /etc/netplan/01-netcgf.yaml ]] && [[ $CCCODENAME == bionic ]] && Mode=netplan
+[[ -f /etc/netplan/01-netcfg.yaml ]] && [[ $CCCODENAME == bionic ]] && Mode=netplan
 
 ################################################################################################
 
@@ -86,7 +86,7 @@ DDD=$( echo $serveripv4 | awk -F '.' '{print $4}' )
 
 # Ikoula 独服
 function ikoula_interfaces() {
-[[ -z $(which ifdown) ]] && { echo -e "${green}Installing ifdown ...${normal}" ; apt-get install ifdown -y ; }
+[[ -z $(which ifdown) ]] && { echo -e "${green}Installing ifdown ...${normal}" ; apt-get install ifupdown -y ; }
 grep -q "iface $interface inet6 static" /etc/network/interfaces || {
 cp -f /etc/network/interfaces /log/interfaces.$(date "+%Y.%m.%d.%H.%M.%S").bak
 cat << EOF >> /etc/network/interfaces
@@ -103,8 +103,8 @@ systemctl restart networking.service || echo -e "\n${red}systemctl restart netwo
 
 # Ikoula 独服，Ubuntu 18.04 系统（netplan）
 function ikoula_netplan() {
-cp -f /etc/netplan/01-netcgf.yaml /log/01-netcgf.yaml.$(date "+%Y.%m.%d.%H.%M.%S").bak
-cat << EOF > /etc/netplan/01-netcgf.yaml
+cp -f /etc/netplan/01-netcfg.yaml /log/01-netcfg.yaml.$(date "+%Y.%m.%d.%H.%M.%S").bak
+cat << EOF > /etc/netplan/01-netcfg.yaml
 network:
   version: 2
   renderer: networkd
