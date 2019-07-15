@@ -72,6 +72,7 @@ lt_version=$(pkg-config --exists --print-errors "libtorrent-rasterbar >= 10086" 
 
 [[ $mode == ppa ]] && [[ $DISTRO != Ubuntu ]] && echo -e "${normal}PPA is not support for $DISTRO, change installation mode from ppa to apt" && mode=apt
 
+[[ -z $latest_stable ]] && latest_stable=2.0.3
 # Check if ssl issue should be fix
 version_ge $version 1.3.11 || DESSL=Yes
 # Check if input branch is available
