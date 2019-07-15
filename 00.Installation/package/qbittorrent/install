@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 
-script_update=2019.07.14
-script_version=r11005
+script_update=2019.07.15
+script_version=r11006
 
 ################################################################################################ Debug
 
@@ -82,6 +82,15 @@ if [[ $type == desktop ]]; then
 else
     package_name=qbittorrent-nox
     compile_flag='--disable-gui'
+fi
+
+ppa_version=4.1.6
+
+if   [[ $CODENAME == jessie  ]]; then repo_version=3.1.10 ; ppa_version=3.3.16
+elif [[ $CODENAME == stretch ]]; then repo_version=3.3.7
+elif [[ $CODENAME == buster  ]]; then repo_version=4.1.5
+elif [[ $CODENAME == xenial  ]]; then repo_version=3.3.1
+elif [[ $CODENAME == bionic  ]]; then repo_version=4.0.3
 fi
 
 ################################################################################################ Sub functions
@@ -247,12 +256,12 @@ fi
 
 
 case $mode in
-    apt     ) echo -ne "Installing $AppName from $CODENAME repo ..." | tee -a $OutputLOG
+    apt     ) echo -ne "Installing $AppName ${bold}${cyan}$repo_version${normal} from $CODENAME repo ..." | tee -a $OutputLOG
               install_qbittorrent_apt & spinner $!
               check_status | tee -a $OutputLOG
               ;;
 
-    ppa    )  echo -ne "Installing $AppName from stable ppa ..." | tee -a $OutputLOG
+    ppa    )  echo -ne "Installing $AppName ${bold}${cyan}$ppa_version${normal}from stable ppa ..." | tee -a $OutputLOG
               install_qbittorrent_ppa & spinner $!
               check_status | tee -a $OutputLOG
               ;;
@@ -274,22 +283,9 @@ esac
 
 
 
-
 ###################### deprecated ######################
 
 function deprecated_codes() {
-
-https://github.com/qbittorrent/qBittorrent/blob/master/.travis.yml
-https://launchpad.net/~beineri
-https://launchpad.net/~beineri/+archive/ubuntu/opt-qt59-xenial
-https://launchpad.net/~beineri/+archive/ubuntu/opt-qt595-xenial
-https://launchpad.net/~beineri/+archive/ubuntu/opt-qt597-xenial
-https://launchpad.net/~beineri/+archive/ubuntu/opt-qt597-trusty
-[qt59base, qt59svg, qt59tools]
-
-
-
-
 
     if [[ -n $(which checkinstalll) ]]; then
         apt-cache show libtorrent-rasterbar | grep inexistence -q && dpkg -r libtorrent-rasterbar
