@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 #
-script_update=2019.07.14
-script_version=r11047
+script_update=2019.07.16
+script_version=r11048
 
 ################################################################################################ Debug
 
@@ -132,45 +132,56 @@ function install_lt_source() {
     cd $AppNameLower-$version
 
     # See here for details: https://github.com/qbittorrent/qBittorrent/issues/6383
-    # Patches from amefs (QuickBox Dev)
-    if version_ge $version 1.2 ; then
-        sleep 0 ####### wait
-    elif version_ge $version 1.1 ; then
-        wget https://github.com/QuickBox/QB/raw/master/setup/sources/libtorrent-rasterbar-RC_1_1.patch >> $OutputLOG 2>&1
-        patch -p1 < libtorrent-rasterbar-RC_1_1.patch >> $OutputLOG 2>&1
-    elif version_ge $version 1.0 ; then
-        wget https://github.com/QuickBox/QB/raw/master/setup/sources/libtorrent-rasterbar-RC_1_0.patch >> $OutputLOG 2>&1
-        patch -p1 < libtorrent-rasterbar-RC_1_0.patch >> $OutputLOG 2>&1
-    else
-        sed -i "s/+ target_specific(),/+ target_specific() + ['-std=c++11'],/" bindings/python/setup.py || NoPatch=1
+    if [[ $CODENAME =~ (jessie|xenial) ]] ; then
+        if version_ge $version 1.2 ; then
+            sleep 0 # wait
+        elif version_ge $version 1.1 ; then
+            if [[ -f $local_packages/package/libtorrent-rasterbar/RC_1_1.patch ]] ;then
+                cp -f $local_packages/package/libtorrent-rasterbar/RC_1_1.patch .
+            else
+                wget $inexistence_url/raw/$inexistence_branch/00.Installation/package/libtorrent-rasterbar/RC_1_1.patch >> $OutputLOG 2>&1
+            fi
+            patch -p1 < RC_1_1.patch >> $OutputLOG 2>&1
+        elif version_ge $version 1.0 ; then
+            if [[ -f $local_packages/package/libtorrent-rasterbar/RC_1_0.patch ]] ;then
+                cp -f $local_packages/package/libtorrent-rasterbar/RC_1_0.patch .
+            else
+                wget $inexistence_url/raw/$inexistence_branch/00.Installation/package/libtorrent-rasterbar/RC_1_0.patch >> $OutputLOG 2>&1
+            fi
+            patch -p1 < RC_1_0.patch >> $OutputLOG 2>&1
+        else
+            sed -i "s/+ target_specific(),/+ target_specific() + ['-std=c++11'],/" bindings/python/setup.py || NoPatch=1
+        fi
     fi
 
-    version=$(grep -oE "AC_INIT\(\[libtorrent-rasterbar\],.*" configure.ac | grep -oE "[0-9.]+" | head -1)       # From QuickBox
+    version=$(grep -oE "AC_INIT\(\[libtorrent-rasterbar\],.*" configure.ac | grep -oE "[0-9.]+" | head -1)  # From QuickBox
+    # version=$(cat Makefile | grep -i package_version\ \= | cut -d= -f2 | sed 's/ //g')  # From Swizzin
+
     ./autotool.sh >> $OutputLOG 2>&1
 
-    if [[ -z $NoPatch ]]; then
-        ./configure --enable-python-binding --with-libiconv \
-                    --disable-debug --enable-encryption --with-libgeoip=system CXXFLAGS=-std=c++11  >> $OutputLOG 2>&1 # For both Deluge and qBittorrent
-    else
-        ./configure --enable-python-binding --with-libiconv \
-                    --disable-debug --enable-encryption --with-libgeoip=system                      >> $OutputLOG 2>&1
-    fi
-
-    # version=$(cat Makefile | grep -i package_version\ \= | cut -d= -f2 | sed 's/ //g')      # From Swizzin
+    ./configure --enable-python-binding --with-libiconv \
+                --disable-debug --enable-encryption --with-libgeoip=system \
+                CXXFLAGS=-std=c++11  >> $OutputLOG 2>&1 
+                # For both Deluge and qBittorrent
 
     make -j$MAXCPUS  >> $OutputLOG 2>&1
     rm -rf $SCLocation/tmp-$AppNameLower
     make install     DESTDIR=$SCLocation/tmp-$AppNameLower  >> $OutputLOG 2>&1
-    mv $SCLocation/tmp-libtorrent-rasterbar/usr/local/lib/python2.7/site-packages  $SCLocation/tmp-libtorrent-rasterbar/usr/local/lib/python2.7/dist-packages
+    mv $SCLocation/tmp-libtorrent-rasterbar/usr/local/lib/python2.7/site-packages \
+       $SCLocation/tmp-libtorrent-rasterbar/usr/local/lib/python2.7/dist-packages
+    mkdir -p /usr/local/include/libtorrent
 
     if [[ -n $(which fpm) ]]; then
         fpm -C $SCLocation/tmp-$AppNameLower -n $DebName -v $version \
             -p $DebLocation/$DebName-$version-$CODENAME-$arch.deb \
-            -s dir -t deb -a native -m aniverse -f \
-            --description "an efficient feature complete C++ bittorrent implementation, installed by inexistence" >> $OutputLOG 2>&1
-        dpkg -i $DebLocation/$AppNameLower-$version-$CODENAME-$arch.deb >> $OutputLOG 2>&1 && touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock
+            -s dir -t deb -a native -m aniverse -f --description \
+            "a feature complete C++ bittorrent implementation, installed by inexistence" \
+            >> $OutputLOG 2>&1
+        dpkg -i $DebLocation/$DebName-$version-$CODENAME-$arch.deb >> $OutputLOG 2>&1 &&
+        touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock
     else
-        make install >> $OutputLOG 2>&1 && touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock
+        make install >> $OutputLOG 2>&1 &&
+        touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock
     fi
 
     [[ -f /tmp/$status_lock.1.lock ]] && touch $LOCKLocation/$AppNameLower.lock
@@ -298,6 +309,14 @@ function deprecated_codes() {
         apt-cache show libtorrent-rasterbar | grep inexistence -q && dpkg -r libtorrent-rasterbar
         mkdir -p doc-pak && echo "an efficient feature complete C++ bittorrent implementation, installed by inexistence" > description-pak
         checkinstall -y --pkgname=libtorrent-rasterbar --pkggroup libtorrent --pkgversion $version >> $OutputLOG 2>&1 && touch /tmp/lt.1.lock || touch /tmp/lt.2.lock
+    fi
+
+    if [[ -z $NoPatch ]]; then
+        ./configure --enable-python-binding --with-libiconv \
+                    --disable-debug --enable-encryption --with-libgeoip=system CXXFLAGS=-std=c++11  >> $OutputLOG 2>&1 # For both Deluge and qBittorrent
+    else
+        ./configure --enable-python-binding --with-libiconv \
+                    --disable-debug --enable-encryption --with-libgeoip=system                      >> $OutputLOG 2>&1
     fi
 
 }
