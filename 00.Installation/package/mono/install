@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 
-script_update=2019.07.13
-script_version=r10001
+script_update=2019.07.17
+script_version=r10002
 
 ################################################################################################ Debug
 
@@ -84,9 +84,9 @@ function install_mono() {
         fi
     fi
 
-    [[ $CODENAME != buster ]] && 
-    echo "deb https://download.mono-project.com/repo/$DISTROL $CODENAME/snapshots/5.18/. main" > /etc/apt/sources.list.d/mono.list
-  # echo "deb http://download.mono-project.com/repo/$DISTROL stable-$CODENAME main" > /etc/apt/sources.list.d/mono.list
+  # [[ $CODENAME != buster ]] && 
+  # echo "deb https://download.mono-project.com/repo/$DISTROL $CODENAME/snapshots/5.18/. main" > /etc/apt/sources.list.d/mono.list
+    echo "deb http://download.mono-project.com/repo/$DISTROL stable-$CODENAME main" > /etc/apt/sources.list.d/mono.list
 
     apt-get update >> $OutputLOG 2>&1
     apt-get install -y mono-complete ca-certificates-mono >> $OutputLOG 2>&1
