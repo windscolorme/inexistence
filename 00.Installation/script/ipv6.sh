@@ -4,7 +4,7 @@
 # Author: Aniverse
 #
 script_update=2019.07.17
-script_version=r20008
+script_version=r20009
 ################################################################################################
 
 usage_guide() {
@@ -97,15 +97,18 @@ function check_var() {
 
 # Ikoula 独服（/etc/network/interfaces）
 function ikoula_interfaces() {
-    if [[ ! $(grep -q "iface $interface inet6 static" /etc/network/interfaces) ]] ; then
+    if [[ ! $(grep -q "iface $interface inet6 static" /etc/network/interfaces) ]] || [[ $force == 1 ]] ; then
         file_backup
+        [[ $force == 1 ]] && interfaces_file_clean
         cat << EOF >> /etc/network/interfaces
+### Added by IPv6_Script ###
 iface $interface inet6 static
 address 2a00:c70:1:$AAA:$BBB:$CCC:$DDD:1
 netmask 96
 gateway 2a00:c70:1:$AAA:$BBB:$CCC::1
+### IPv6_Script END ###
 EOF
-        systemctl restart networking.service || echo -e "\n${red}systemctl restart networking.service FAILED${normal}"
+        systemctl_restart
     fi
 }
 
@@ -127,12 +130,14 @@ auto $interface
 	gateway $AAA.$BBB.$CCC.1
 	dns-nameservers 213.246.36.14 213.246.33.144 80.93.83.11
 
+	### Added by IPv6_Script ###
 	iface $interface inet6 static
 	address 2a00:c70:1:$AAA:$BBB:$CCC:$DDD:1
 	netmask 96
 	gateway 2a00:c70:1:$AAA:$BBB:$CCC::1
+	### IPv6_Script END ###
 EOF
-    systemctl restart networking.service || echo -e "\n${red}systemctl restart networking.service FAILED${normal}"
+    systemctl_restart
 }
 
 
@@ -157,6 +162,39 @@ network:
         addresses: [213.246.36.14,213.246.33.144,80.93.83.11]
 EOF
     netplan apply
+}
+
+
+################################################################################################
+
+
+function online_interfaces_file_mod() {
+    cat << EOF >> /etc/network/interfaces
+### Added by IPv6_Script ###
+iface $interfaces inet6 static
+address $IPv6
+netmask $subnet
+accept_ra 1
+pre-up dhclient -cf /etc/dhcp/dhclient6.conf -pf /run/dhclient6.$interfaces.pid -6 -P $interfaces
+pre-down dhclient -x -pf /run/dhclient6.$interfaces.pid
+### IPv6_Script END ###
+EOF
+}
+
+# Online／OneProvider Paris 独服，Ubuntu 16.04，Debian 8/9/10
+function online_interface() {
+    file_backup
+    if [[ ! $(grep -q "iface $interface inet6 static" /etc/network/interfaces) ]] || [[ $force == 1 ]] ; then
+        [[ $force == 1 ]] && interfaces_file_clean
+        online_interface_file_mod
+    fi
+    cat << EOF > /etc/dhcp/dhclient6.conf
+interface \"$interfaces\" {
+send dhcp6.client-id $DUID;
+request;
+}
+EOF
+    systemctl_restart
 }
 
 
@@ -228,6 +266,10 @@ function interfaces_file_clean() {
     done
 }
 
+function systemctl_restart() {
+    systemctl restart networking.service || echo -e "\n${red}systemctl restart networking.service FAILED${normal}"
+}
+
 function ipv6_test() {
     echo -ne "\n${bold}Testing IPv6 connectivity ... ${normal}"
     IPv6_test=$(ping6 -c 5 ipv6.google.com | grep 'received' | awk -F',' '{ print $2 }' | awk '{ print $1 }')
@@ -238,6 +280,12 @@ function ipv6_test() {
         echo "${bold}${red}Failed${normal}"
         exit 1
     fi
+}
+
+function sysctl_enable_ipv6() {
+    sysctl -w net.ipv6.conf.$interfaces.autoconf=0 > /dev/null
+    sed -i '/^net.ipv6.conf.*/'d /etc/sysctl.conf
+    echo "net.ipv6.conf.$interfaces.autoconf=0" >> /etc/sysctl.conf
 }
 
 ###########################################################################
