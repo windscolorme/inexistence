@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 
-script_update=2019.07.15
-script_version=r11006
+script_update=2019.07.17
+script_version=r11007
 
 ################################################################################################ Debug
 
@@ -137,17 +137,20 @@ deb http://ppa.launchpad.net/beineri/opt-qt597-trusty/ubuntu trusty main
 deb-src http://ppa.launchpad.net/beineri/opt-qt597-trusty/ubuntu trusty main
 EOF
         cat << EOF > /etc/apt/sources.list.d/toolchain.list
-deb http://ppa.launchpad.net/ubuntu-toolchain-r/ppa/ubuntu trusty main
-deb-src http://ppa.launchpad.net/ubuntu-toolchain-r/ppa/ubuntu trusty main
+deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu trusty main
+deb-src http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu trusty main
 EOF
-        apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 10C56D0DE9977759 1E9377A2BA9EF27F
-        apt-get update
-        apt-get install -y qt59base qt59svg qt59tools gcc-9 g++-9
+        apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 10C56D0DE9977759 1E9377A2BA9EF27F >> $OutputLOG 2>&1
+        apt-get update >> $OutputLOG 2>&1
+        apt-get install -y qt59base qt59svg qt59tools >> $OutputLOG 2>&1
+        apt-get install -y gcc-9 g++-9 >> $OutputLOG 2>&1
         cd /usr/bin
+        which gcc-9 && 
         for gcc in gcc g++ gcc-ranlib gcc-ar gcc-nm gcov ; do
            rm -f $gcc
            ln -s x86_64-linux-gnu-${gcc}-9 $gcc
         done
+        cd $SCLocation
         export PATH=/opt/qt59/bin:$PATH
         export PKG_CONFIG_PATH=/opt/qt59/lib/pkgconfig:$PKG_CONFIG_PATH
     elif [[ $CODENAME =~ (xenial|stretch) ]]; then
@@ -155,13 +158,13 @@ EOF
 deb http://ppa.launchpad.net/beineri/opt-qt597-xenial/ubuntu xenial main
 deb-src http://ppa.launchpad.net/beineri/opt-qt597-xenial/ubuntu xenial main
 EOF
-        apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 10C56D0DE9977759
-        apt-get update
-        apt-get install -y qt59base qt59svg qt59tools
+        apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 10C56D0DE9977759 >> $OutputLOG 2>&1
+        apt-get update >> $OutputLOG 2>&1
+        apt-get install -y qt59base qt59svg qt59tools >> $OutputLOG 2>&1
         export PATH=/opt/qt59/bin:$PATH
         export PKG_CONFIG_PATH=/opt/qt59/lib/pkgconfig:$PKG_CONFIG_PATH
     elif [[ $CODENAME =~ (bionic|buster) ]]; then
-        apt-get install -y qtbase5-dev qttools5-dev-tools libqt5svg5-dev
+        apt-get install -y qtbase5-dev qttools5-dev-tools libqt5svg5-dev >> $OutputLOG 2>&1
     fi
 
     status_lock=$AppNameLower-d
