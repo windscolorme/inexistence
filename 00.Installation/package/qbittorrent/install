@@ -4,7 +4,7 @@
 # Author: Aniverse
 
 script_update=2019.07.20
-script_version=r11010
+script_version=r11011
 
 ################################################################################################ Debug
 
@@ -161,22 +161,12 @@ function qt_set_env() {
 function install_qbittorrent_dependencies() {
     echo >> $OutputLOG
 
-    if version_ge $version 4.2.0 ; then
-        qt_required_version=5.9.0
-    else
-        qt_required_version=5.5.1
-    fi
-
-    # https://launchpad.net/~ubuntu-toolchain-r/+archive/ubuntu/ppa
     # https://launchpad.net/~ubuntu-toolchain-r/+archive/ubuntu/test
     # https://launchpad.net/~beineri/+archive/ubuntu/opt-qt597-trusty
-    # https://launchpad.net/~beineri/+archive/ubuntu/opt-qt597-xenial
-    if [[ $CODENAME == jessie ]]; then
-        install_qt_ppa_trusty
-        install_gcc_ppa_trusty
-        qt_set_env
-    elif [[ $CODENAME == stretch ]]; then
-        cat << EOF > /etc/apt/sources.list.d/jessie.list
+    if version_ge $version 4.2.0 ; then
+        qt_required_version=5.9.0
+            if [[ $CODENAME == stretch ]]; then
+                cat << EOF > /etc/apt/sources.list.d/jessie.list
 deb http://snapshot.debian.org/archive/debian/20190321T212815Z/ jessie main non-free contrib
 deb http://snapshot.debian.org/archive/debian/20190321T212815Z/ jessie-updates main non-free contrib
 deb http://snapshot.debian.org/archive/debian/20190321T212815Z/ jessie-backports main non-free contrib
@@ -186,19 +176,31 @@ deb-src http://snapshot.debian.org/archive/debian/20190321T212815Z/ jessie-updat
 deb-src http://snapshot.debian.org/archive/debian/20190321T212815Z/ jessie-backports main non-free contrib
 deb-src http://snapshot.debian.org/archive/debian-security/20190321T212815Z/ jessie/updates main non-free contrib
 EOF
-        install_qt_ppa_trusty
-        qt_set_env
-    elif [[ $CODENAME == xenial ]]; then
-        cat << EOF > /etc/apt/sources.list.d/qt.5.9.list
+                install_qt_ppa_trusty
+                qt_set_env
+            elif [[ $CODENAME == xenial ]]; then
+                cat << EOF > /etc/apt/sources.list.d/qt.5.9.list
 deb http://ppa.launchpad.net/beineri/opt-qt597-xenial/ubuntu xenial main
 deb-src http://ppa.launchpad.net/beineri/opt-qt597-xenial/ubuntu xenial main
 EOF
-        apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 10C56D0DE9977759 >> $OutputLOG 2>&1
-        apt-get update >> $OutputLOG 2>&1
-        apt-get install -y qt59base qt59svg qt59tools >> $OutputLOG 2>&1
-        qt_set_env
-    elif [[ $CODENAME =~ (bionic|buster) ]]; then
+                apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 10C56D0DE9977759 >> $OutputLOG 2>&1
+                apt-get update >> $OutputLOG 2>&1
+                apt-get install -y qt59base qt59svg qt59tools >> $OutputLOG 2>&1
+                qt_set_env
+            fi
+    else
+        qt_required_version=5.5.1
+        if [[ $CODENAME =~ (stretch|xenial) ]]; then
+            apt-get install -y qtbase5-dev qttools5-dev-tools libqt5svg5-dev >> $OutputLOG 2>&1
+        fi
+    fi
+
+    if [[ $CODENAME =~ (bionic|buster) ]]; then
         apt-get install -y qtbase5-dev qttools5-dev-tools libqt5svg5-dev >> $OutputLOG 2>&1
+    elif [[ $CODENAME == jessie ]]; then
+        install_qt_ppa_trusty
+        install_gcc_ppa_trusty
+        qt_set_env
     fi
 
     status_lock=$AppNameLower-d
