@@ -16,8 +16,8 @@ export PATH
 SYSTEMCHECK=1
 DeBUG=0
 script_lang=eng
-INEXISTENCEVER=1.1.3.9
-INEXISTENCEDATE=2019.07.14
+INEXISTENCEVER=1.1.3.10
+INEXISTENCEDATE=2019.07.20
 default_branch=master
 # --------------------------------------------------------------------------------
 
@@ -716,7 +716,7 @@ while [[ -z $qb_version ]]; do
         03 | 3) qb_version=4.0.4 ;;
         04 | 4) qb_version=4.1.3 ;;
         05 | 5) qb_version=4.1.6 ;;
-        11) qb_version=4.2.0.alpha ;;
+        11) qb_version=4.2.0 ;;
         30) input_version && qb_version="${input_version_num}"  ;;
         40) qb_version=repo ;;
         50) qb_version=ppa ;;
@@ -744,7 +744,7 @@ elif [[ $qb_version == ppa ]]; then
     else
         echo "${bold}${baiqingse}qBittorrent $QB_latest_ver${normal} ${bold}$lang_will_be_installed from Stable PPA${normal}"
     fi
-elif [[ $qb_version == "4.2.0.alpha" ]]; then
+elif [[ $qb_version == 4.2.0 ]]; then
     echo -e "${bold}${bailanse}qBittorrent ${qb_version}${normal} ${bold}$lang_will_be_installed${normal}"
     echo -e "\n$${ZY} This is NOT a stable release${normal}"
 else
@@ -2439,13 +2439,15 @@ mv /etc/00.preparation.log $LogLocation/00.preparation.log
 
 ######################################################################################################
 
-[[ $InsBBR == Yes || $InsBBR == To\ be\ enabled ]] && { echo -ne "Configuring BBR ... \n\n\n" ; install_bbr 2>&1 | tee $LogLocation/02.bbr.log ; }
+[[ $InsBBR == Yes || $InsBBR == To\ be\ enabled ]] && {
+echo -ne "Configuring BBR ..." ; install_bbr 2>&1 | tee $LogLocation/02.bbr.log ; }
 
 if [[ -n $lt_version ]] && [[ $lt_version != system ]]; then
-    [[ $DeBUG == 1 ]] && {
-        echo "Deluge_2_later=$Deluge_2_later   qBittorrent_4_2_0_later=$qBittorrent_4_2_0_later
-        lt_ver=$lt_ver  lt8_support=$lt8_support  lt_ver_qb3_ok=$lt_ver_qb3_ok  lt_ver_de2_ok=$lt_ver_de2_ok
-        lt_version=$lt_version" ; }
+    if [[ $DeBUG == 1 ]]; then
+        echo "Deluge_2_later=$Deluge_2_later   qBittorrent_4_2_0_later=$qBittorrent_4_2_0_later"
+        echo "lt_ver=$lt_ver  lt8_support=$lt8_support  lt_ver_qb3_ok=$lt_ver_qb3_ok  lt_ver_de2_ok=$lt_ver_de2_ok"
+        echo "lt_version=$lt_version"
+    fi
     if   [[ $lt_version == RC_1_0 ]]; then
         bash $local_packages/package/libtorrent-rasterbar/install --logbase $LogTimes -m deb
     elif [[ $lt_version == RC_1_1 ]]; then
@@ -2460,6 +2462,8 @@ if [[ $qb_version != No ]]; then
         bash $local_packages/package/qbittorrent/install --logbase $LogTimes -m apt
     elif [[ $qb_version == ppa ]]; then
         bash $local_packages/package/qbittorrent/install --logbase $LogTimes -m ppa
+    elif [[ $qb_version == 4.2.0 ]]; then
+        bash $local_packages/package/qbittorrent/install --logbase $LogTimes -m source -b master
     else
         bash $local_packages/package/qbittorrent/install --logbase $LogTimes -m source -v $qb_version
     fi
@@ -2468,21 +2472,20 @@ fi
 
 if [[ $de_version != No ]]; then
     echo -ne "Installing Deluge ... \n\n\n" ; install_deluge 2>&1 | tee $LogLocation/03.de1.log
-    echo -ne "Configuring Deluge ... \n\n\n" ; config_deluge 2>&1 | tee $LogLocation/04.de2.log
+    echo -ne "Configuring Deluge ..." ; config_deluge > /dev/null 2>&1 # | tee $LogLocation/04.de2.log
 fi
 
-[[ $rt_version != No ]] && {
-echo -ne "Installing rTorrent ... \n\n\n" ; install_rtorrent 2>&1 | tee $LogLocation/07.rt.log
-[[ $InsFlood == Yes ]] && { echo -ne "Installing Flood ... \n\n\n" ; install_flood 2>&1 | tee $LogLocation/07.flood.log ; } ; }
+[[ $rt_version != No ]] && { echo -ne "Installing rTorrent ... \n\n\n" ; install_rtorrent 2>&1 | tee $LogLocation/07.rt.log
+[[ $InsFlood == Yes  ]] && { echo -ne "Installing Flood ... \n\n\n"    ; install_flood 2>&1 | tee $LogLocation/07.flood.log ; } ; }
 
 [[ $tr_version != No ]] && {
 echo -ne "Installing Transmission ... \n\n\n" ; install_transmission 2>&1 | tee $LogLocation/08.tr1.log
-echo -ne "Configuring Transmission ... " ; config_transmission 2>&1 | tee $LogLocation/09.tr2.log ; }
+echo -ne "Configuring Transmission ... "      ; config_transmission 2>&1  | tee $LogLocation/09.tr2.log ; }
 
 [[ $InsFlex   == yes ]]  && { bash $local_packages/package/flexget/install   --logbase $LogTimes --system
                               bash $local_packages/package/flexget/configure --logbase $LogTimes --system -u $iUser -p $iPass -w 6566 ; }
 [[ $InsRclone == yes ]]  && { bash $local_packages/package/rclone/install    --logbase $LogTimes ; }
-[[ $InsRDP    == VNC ]]  && { echo -ne "Installing VNC ... \n\n\n" ; install_vnc 2>&1 | tee $LogLocation/12.vnc.log ; }
+[[ $InsRDP    == VNC ]]  && { echo -ne "Installing VNC ... \n\n\n"  ; install_vnc  2>&1 | tee $LogLocation/12.vnc.log ; }
 [[ $InsRDP    == X2Go ]] && { echo -ne "Installing X2Go ... \n\n\n" ; install_x2go 2>&1 | tee $LogLocation/12.x2go.log ; }
 [[ $InsWine   == yes ]]  && { bash $local_packages/package/wine/install --logbase $LogTimes
                               bash $local_packages/package/mono/install --logbase $LogTimes ; }
