@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 
-script_update=2019.07.20
-script_version=r11012
+script_update=2019.07.21
+script_version=r11013
 
 ################################################################################################ Debug
 
@@ -282,8 +282,8 @@ function compile_qbittorrent() {
     if [[ -n $(which fpm) ]]; then
         fpm -C $SCLocation/tmp-$AppNameLower -n $DebName -v $version \
             -p $DebLocation/$DebName-$version_s-$CODENAME-$arch.deb \
-            -s dir -t deb -a native -m aniverse -f --description \
-            "qBittorrent client (without X support), installed by inexistence" >> $OutputLOG 2>&1
+            -s dir -t deb -a native -m aniverse -f \
+            --description "qBittorrent client (without X support), installed by inexistence" >> $OutputLOG 2>&1
         dpkg -i $DebLocation/$DebName-$version_s-$CODENAME-$arch.deb >> $OutputLOG 2>&1 # && touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock
     else
         make install >> $OutputLOG 2>&1 # && touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock

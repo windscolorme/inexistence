@@ -57,8 +57,6 @@ type=ifdown
 [[ -z $(which ifconfig) ]] && { echo -e "${green}Installing ifconfig ...${normal}" ; apt-get install net-tools -y  ; }
 [[ -z $(which ifconfig) ]] && { echo -e "${red}Error: No ifconfig!${normal}"  ; exit 1 ; }
 
-mkdir -p /log
-
 ################################################################################################
 
 function isValidIpAddress() { echo $1 | grep -qE '^[0-9][0-9]?[0-9]?\.[0-9][0-9]?[0-9]?\.[0-9][0-9]?[0-9]?\.[0-9][0-9]?[0-9]?$' ; }
@@ -171,25 +169,25 @@ EOF
 function online_interfaces_file_mod() {
     cat << EOF >> /etc/network/interfaces
 ### Added by IPv6_Script ###
-iface $interfaces inet6 static
+iface $interface inet6 static
 address $IPv6
 netmask $subnet
 accept_ra 1
-pre-up dhclient -cf /etc/dhcp/dhclient6.conf -pf /run/dhclient6.$interfaces.pid -6 -P $interfaces
-pre-down dhclient -x -pf /run/dhclient6.$interfaces.pid
+pre-up dhclient -cf /etc/dhcp/dhclient6.conf -pf /run/dhclient6.$interface.pid -6 -P $interface
+pre-down dhclient -x -pf /run/dhclient6.$interface.pid
 ### IPv6_Script END ###
 EOF
 }
 
 # Online／OneProvider Paris 独服，Ubuntu 16.04，Debian 8/9/10
-function online_interface() {
+function online_interfaces() {
     file_backup
     if [[ ! $(grep -q "iface $interface inet6 static" /etc/network/interfaces) ]] || [[ $force == 1 ]] ; then
         [[ $force == 1 ]] && interfaces_file_clean
         online_interface_file_mod
     fi
     cat << EOF > /etc/dhcp/dhclient6.conf
-interface \"$interfaces\" {
+interface \"$interface\" {
 send dhcp6.client-id $DUID;
 request;
 }
@@ -253,10 +251,11 @@ EOF
 ###########################################################################
 
 function file_backup() {
-    if [[ $type == netpaln ]]; then
-        cp -f   /etc/netplan/01-netcfg.yaml  /log/netcfg.yaml.$(date "+%Y.%m.%d.%H.%M.%S").bak
+    mkdir -p /log/script
+    if [[ $type == netplan ]]; then
+        cp -f   /etc/netplan/01-netcfg.yaml  /log/script/netcfg.yaml.$(date "+%Y.%m.%d.%H.%M.%S").bak
     elif [[ $type == ifdown ]]; then
-        cp -f   /etc/network/interfaces      /log/interfaces.$(date "+%Y.%m.%d.%H.%M.%S").bak
+        cp -f   /etc/network/interfaces      /log/script/interfaces.$(date "+%Y.%m.%d.%H.%M.%S").bak
     fi
 }
 
@@ -283,9 +282,24 @@ function ipv6_test() {
 }
 
 function sysctl_enable_ipv6() {
-    sysctl -w net.ipv6.conf.$interfaces.autoconf=0 > /dev/null
+    sysctl -w net.ipv6.conf.$interface.autoconf=0 > /dev/null
     sed -i '/^net.ipv6.conf.*/'d /etc/sysctl.conf
-    echo "net.ipv6.conf.$interfaces.autoconf=0" >> /etc/sysctl.conf
+    echo "net.ipv6.conf.$interface.autoconf=0" >> /etc/sysctl.conf
+}
+
+function info() {    echo -e "
+IPv4=$serveripv4
+interface=$interface
+mode=$mode   type=$type"
+    echo -e "\n${yellow}cat /etc/network/interfaces${normal}\n"
+    cat /etc/network/interfaces     2>/dev/null
+    echo -e "\n${yellow}cat /etc/netplan/01-netcfg.yaml${normal}\n"
+    cat /etc/netplan/01-netcfg.yaml 2>/dev/null
+    echo -e "
+cd /log/script && ls
+netplan apply
+systemctl restart networking.service
+ping6 -c 5 ipv6.google.com"
 }
 
 ###########################################################################
@@ -293,11 +307,11 @@ function sysctl_enable_ipv6() {
 
 
 case $mode in
-    standard        ) standard_interfaces ; ipv6_test ;;
-    ikoula          ) ikoula_interfaces2  ; ipv6_test ;;
-    ikoula-netplan  ) ikoula_netplan      ; ipv6_test ;;
-    online-netplan  ) online_netplan      ; ipv6_test ;;
-    test            ) echo -e "\n$serveripv4\ncat /etc/network/interfaces\ncat /etc/netplan/01-netcfg.yaml\n"
-                      cat /etc/network/interfaces ; cat /etc/netplan/01-netcfg.yaml ; ipv6_test ;;
+    rh  ) standard_interfaces ; ipv6_test ;;
+    ik  ) ikoula_interfaces   ; ipv6_test ;;
+    ik2 ) ikoula_netplan      ; ipv6_test ;;
+    ol  ) online_interfaces   ; ipv6_test ;;
+    ol2 ) online_netplan      ; ipv6_test ;;
+    t   ) info ; ipv6_test ;;
 esac
 

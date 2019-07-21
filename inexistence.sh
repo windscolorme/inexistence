@@ -746,7 +746,7 @@ elif [[ $qb_version == ppa ]]; then
     fi
 elif [[ $qb_version == 4.2.0 ]]; then
     echo -e "${bold}${bailanse}qBittorrent ${qb_version}${normal} ${bold}$lang_will_be_installed${normal}"
-    echo -e "\n$${ZY} This is NOT a stable release${normal}"
+    echo -e "\n${ZY} This is NOT a stable release${normal}"
 else
     echo -e "${bold}${baiqingse}qBittorrent ${qb_version}${normal} ${bold}$lang_will_be_installed${normal}"
 fi
