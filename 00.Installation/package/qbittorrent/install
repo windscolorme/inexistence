@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 
-script_update=2019.07.21
-script_version=r11014
+script_update=2019.07.22
+script_version=r11015
 
 ################################################################################################ Debug
 
@@ -344,7 +344,7 @@ case $mode in
                   check_status $status_lock
             # fi
 
-              echo -ne "Installing $AppName ${bold}${cyan}$version${normal} from source codes ..." | tee -a $OutputLOG
+              echo -ne "Installing $AppName ${bold}${cyan}$version_s${normal} from source codes ..." | tee -a $OutputLOG
               compile_qbittorrent & spinner $!
               check_status_qbt | tee -a $OutputLOG
               ;;
