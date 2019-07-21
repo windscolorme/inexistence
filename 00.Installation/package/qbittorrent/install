@@ -4,7 +4,7 @@
 # Author: Aniverse
 
 script_update=2019.07.22
-script_version=r11015
+script_version=r11016
 
 ################################################################################################ Debug
 
@@ -167,7 +167,7 @@ EOF
     apt-get update >> $OutputLOG 2>&1
     apt-get install -y gcc-9 g++-9 >> $OutputLOG 2>&1
     cd /usr/bin
-    which gcc-9 && 
+    which gcc-9 > /dev/null && 
     for gcc in gcc g++ gcc-ranlib gcc-ar gcc-nm gcov ; do
        rm -f $gcc
        ln -s x86_64-linux-gnu-${gcc}-9 $gcc

@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 #
-script_update=2019.07.14
-script_version=r11013
+script_update=2019.07.22
+script_version=r11014
 
 ################################################################################################ Debug
 
@@ -61,6 +61,8 @@ id -u $iUser >/dev/null 2>&1 || { echo -e "ERROR: User $iUser doesn't exist" ; e
 [[ -z $iPort ]] && iPort=9002
 [[ $lang == eng ]] && qbt_language=en
 [[ -z $qbt_language ]] && qbt_language=zh
+
+qb_installed_ver=$(qbittorrent-nox --version 2>&1 | awk '{print $2}' | grep -oE "[0-9.]+")
 
 ################################################################################################
 
@@ -136,9 +138,16 @@ General\Locale=$qbt_language
 Queueing\QueueingEnabled=false
 WebUI\CSRFProtection=false
 WebUI\Port=$wPort
+EOF
+
+  # qBittorrent 4.2.0 and above use PBKDF2
+  # https://github.com/qbittorrent/qBittorrent/commit/05d6a294165c03dab2ed8ec94cb501cd61c4ec34
+    if ! version_ge $qb_installed_ver 4.2.0; then
+        cat > $iHome/.config/qBittorrent/qBittorrent.conf << EOF
 WebUI\Password_ha1=@ByteArray($qbPass)
 WebUI\Username=$iUser
 EOF
+    fi
 
     chown -R $iUser.$iUser $iHome/qbittorrent $iHome/.config/qBittorrent
     systemctl enable qbittorrent@$iUser >> $OutputLOG 2>&1
