@@ -2416,9 +2416,12 @@ ask_apt_sources
 [[ -z $MAXCPUS ]] && MAXCPUS=$(nproc) ; ask_multi_threads
 ask_swap
 
-bash <(wget -qO- https://github.com/Aniverse/inexistence/raw/separate-script/00.Installation/package/qbittorrent/ask)
-
 ask_qbittorrent
+
+wget -qO /tmp/ask_qb https://github.com/Aniverse/inexistence/raw/separate-script/00.Installation/package/qbittorrent/ask
+source /tmp/ask_qb
+ask_qbittorrent_test
+
 ask_deluge
 [[ $de_version != No || $qb_version != No ]] && ask_libtorrent_version
 ask_rtorrent

@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 
-script_update=2019.07.13
-script_version=r10000
+script_update=2019.07.21
+script_version=r10001
 
 ################################################################################################
 
@@ -13,6 +13,14 @@ if [[ -f /etc/inexistence/00.Installation/function ]]; then
 else
     wget -qO /tmp/function https://github.com/Aniverse/inexistence/raw/master/00.Installation/function
     source /tmp/function
+fi
+
+ppa_version=4.1.6
+if   [[ $CODENAME == jessie  ]]; then repo_version=3.1.10 ; ppa_version=3.3.16
+elif [[ $CODENAME == stretch ]]; then repo_version=3.3.7
+elif [[ $CODENAME == buster  ]]; then repo_version=4.1.5
+elif [[ $CODENAME == xenial  ]]; then repo_version=3.3.1
+elif [[ $CODENAME == bionic  ]]; then repo_version=4.0.3
 fi
 
 qbtnox_ver=$( qbittorrent-nox --version 2>&1 | awk '{print $2}' | sed "s/v//" )
@@ -29,12 +37,11 @@ function ask_qbittorrent_test() {
         echo -e "${green}03)${normal} qBittorrent ${cyan}4.0.4${normal}"
         echo -e "${green}04)${normal} qBittorrent ${cyan}4.1.3${normal}"
         echo -e "${green}05)${normal} qBittorrent ${cyan}4.1.6${normal}"
-        [[ $NewQBT == yes ]] && 
         echo -e  "${blue}11)${normal} qBittorrent ${blue}4.2.0${normal}"
         echo -e  "${blue}30)${normal} $language_select_another_version"
-        echo -e "${green}40)${normal} qBittorrent ${cyan}$QB_repo_ver${normal} from ${cyan}repo${normal}"
+        echo -e "${green}40)${normal} qBittorrent ${cyan}$repo_version${normal} from ${cyan}repo${normal}"
         [[ $DISTRO == Ubuntu ]] &&
-        echo -e "${green}50)${normal} qBittorrent ${cyan}$QB_latest_ver${normal} from ${cyan}Stable PPA${normal}"
+        echo -e "${green}50)${normal} qBittorrent ${cyan}$ppa_version${normal} from ${cyan}Stable PPA${normal}"
         echo -e   "${red}99)${normal} $lang_do_not_install qBittorrent"
     
         [[ $qb_installed == Yes ]] &&
@@ -48,6 +55,7 @@ function ask_qbittorrent_test() {
             03 | 3) qb_version=4.0.4 ;;
             04 | 4) qb_version=4.1.3 ;;
             05 | 5) qb_version=4.1.6 ;;
+            11) qb_version=4.2.0 ;;
             30) _input_version && qb_version="${input_version_num}"  ;;
             40) qb_version=repo ;;
             50) qb_version=ppa ;;
