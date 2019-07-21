@@ -16,8 +16,8 @@ export PATH
 SYSTEMCHECK=1
 DeBUG=0
 script_lang=eng
-INEXISTENCEVER=1.1.3.10
-INEXISTENCEDATE=2019.07.20
+INEXISTENCEVER=1.1.3.11
+INEXISTENCEDATE=2019.07.21
 default_branch=master
 # --------------------------------------------------------------------------------
 
@@ -2446,7 +2446,7 @@ mv /etc/00.preparation.log $LogLocation/00.preparation.log
 echo -ne "Configuring BBR ..." ; install_bbr 2>&1 | tee $LogLocation/02.bbr.log ; }
 
 if [[ -n $lt_version ]] && [[ $lt_version != system ]]; then
-    if [[ $DeBUG == 1 ]]; then
+    if [[ $DeBUG == 2 ]]; then # disable this for now
         echo "Deluge_2_later=$Deluge_2_later   qBittorrent_4_2_0_later=$qBittorrent_4_2_0_later"
         echo "lt_ver=$lt_ver  lt8_support=$lt8_support  lt_ver_qb3_ok=$lt_ver_qb3_ok  lt_ver_de2_ok=$lt_ver_de2_ok"
         echo "lt_version=$lt_version"
@@ -2474,8 +2474,8 @@ if [[ $qb_version != No ]]; then
 fi
 
 if [[ $de_version != No ]]; then
-    echo -ne "Installing Deluge ... \n\n\n" ; install_deluge 2>&1 | tee $LogLocation/03.de1.log
-    echo -ne "Configuring Deluge ..." ; config_deluge > /dev/null 2>&1 # | tee $LogLocation/04.de2.log
+    echo -ne "Installing Deluge ... \n" ; install_deluge 2>&1 | tee $LogLocation/03.de1.log
+    echo -ne "Configuring Deluge ... \n" ; config_deluge > /dev/null 2>&1 # | tee $LogLocation/04.de2.log
 fi
 
 [[ $rt_version != No ]] && { echo -ne "Installing rTorrent ... \n\n\n" ; install_rtorrent 2>&1 | tee $LogLocation/07.rt.log

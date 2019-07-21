@@ -152,6 +152,12 @@ function install_qt_repo() {
 }
 
 
+function uninstall_qt_repo() {
+    apt-get purge -y qtbase5-dev qttools5-dev-tools libqt5svg5-dev >> $OutputLOG 2>&1
+    apt-get autoremove -y >> $OutputLOG 2>&1
+}
+
+
 function install_gcc_ppa_trusty() {
     cat << EOF > /etc/apt/sources.list.d/toolchain.list
 deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu trusty main
@@ -199,10 +205,12 @@ function install_qbittorrent_dependencies() {
     if version_ge $version_s 4.2.0 ; then
         qt_required_version=5.9.0
             if [[ $CODENAME == stretch ]]; then
+                uninstall_qt_repo
                 add_jessie_list
                 install_qt_ppa_trusty
                 qt_set_env
             elif [[ $CODENAME == xenial ]]; then
+                uninstall_qt_repo
                 install_qt_ppa_xenial
                 qt_set_env
             fi
@@ -330,11 +338,11 @@ case $mode in
               ;;
 
     source  ) [[ -z $lt_version ]] && echo -e "${CW} No libtorrnt-rasterbar found${normal}" && exit 1
-              if [[ ! -f $LOCKLocation/$AppNameLower.dependencies.lock ]]; then
+            # if [[ ! -f $LOCKLocation/$AppNameLower.dependencies.lock ]]; then
                   echo -ne "Installing $AppName build dependencies ..." | tee -a $OutputLOG
                   install_qbittorrent_dependencies & spinner $!
                   check_status $status_lock
-              fi
+            # fi
 
               echo -ne "Installing $AppName ${bold}${cyan}$version${normal} from source codes ..." | tee -a $OutputLOG
               compile_qbittorrent & spinner $!
