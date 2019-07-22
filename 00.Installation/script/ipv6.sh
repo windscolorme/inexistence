@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 #
-script_update=2019.07.17
-script_version=r20009
+script_update=2019.07.22
+script_version=r20010
 ################################################################################################
 
 usage_guide() {
@@ -201,14 +201,15 @@ EOF
 # Online／OneProvider Paris 独服，Ubuntu 18.04 系统（netplan）
 function online_netplan() {
     check_var
-    cat << EOF > /etc/dhcp/dhclient6.conf
+    file_backup
+
+cat << EOF > /etc/dhcp/dhclient6.conf
 interface "$interface" {
   send dhcp6.client-id $DUID;
   request;
 }
 EOF
-
-    cat << EOF > /etc/systemd/system/dhclient.service
+cat << EOF > /etc/systemd/system/dhclient.service
 [Unit]
 Description=dhclient for sending DUID IPv6
 Wants=network.target
@@ -219,8 +220,7 @@ ExecStart=/sbin/dhclient -cf /etc/dhcp/dhclient6.conf -6 -P -v $interface
 [Install]
 WantedBy=multi-user.target
 EOF
-
-    cat << EOF > /etc/systemd/system/dhclient-netplan.service
+cat << EOF > /etc/systemd/system/dhclient-netplan.service
 [Unit]
 Description=redo netplan apply after dhclient
 Wants=dhclient.service
@@ -232,9 +232,7 @@ ExecStart=/usr/sbin/netplan apply
 [Install]
 WantedBy=dhclient.service
 EOF
-
-    file_backup
-    cat << EOF >> /etc/netplan/01-netcfg.yaml
+cat << EOF >> /etc/netplan/01-netcfg.yaml
       dhcp6: no
       accept-ra: yes
       addresses:
@@ -287,7 +285,8 @@ function sysctl_enable_ipv6() {
     echo "net.ipv6.conf.$interface.autoconf=0" >> /etc/sysctl.conf
 }
 
-function info() {    echo -e "
+function info() {
+    echo -e "
 IPv4=$serveripv4
 interface=$interface
 mode=$mode   type=$type"
