@@ -16,7 +16,7 @@ export PATH
 SYSTEMCHECK=1
 DeBUG=0
 script_lang=eng
-INEXISTENCEVER=1.1.3.12
+INEXISTENCEVER=1.1.3.13
 INEXISTENCEDATE=2019.07.22
 default_branch=master
 # --------------------------------------------------------------------------------
@@ -46,29 +46,29 @@ while [ -n "$1" ] ; do case "$1" in
     --sihuo         ) sihuo=yes         ; shift ;;
     --eng           ) script_lang=eng   ; shift ;;
     --chs           ) script_lang=chs   ; shift ;;
-    --tr-skip       ) TRdefault="No"    ; shift ;;
+    --tr-skip       ) TRdefault=No      ; shift ;;
     --enable-ipv6   ) IPv6Opt=-i        ; shift ;;
-    --apt-yes       ) aptsources="Yes"  ; shift ;;
-    --apt-no        ) aptsources="No"   ; shift ;;
-    --swap-yes      ) USESWAP="Yes"     ; shift ;;
-    --swap-no       ) USESWAP="No"      ; shift ;;
-    --bbr-yes       ) InsBBR="Yes"      ; shift ;;
-    --bbr-no        ) InsBBR="No"       ; shift ;;
-    --flood-yes     ) InsFlood="Yes"    ; shift ;;
-    --flood-no      ) InsFlood="No"     ; shift ;;
-    --rdp-vnc       ) InsRDP="VNC"      ; shift ;;
-    --rdp-x2go      ) InsRDP="X2Go"     ; shift ;;
-    --rdp-no        ) InsRDP="No"       ; shift ;;
+    --apt-yes       ) aptsources=yes    ; shift ;;
+    --apt-no        ) aptsources=no     ; shift ;;
+    --swap-yes      ) USESWAP=Yes       ; shift ;;
+    --swap-no       ) USESWAP=No        ; shift ;;
+    --bbr-yes       ) InsBBR=Yes        ; shift ;;
+    --bbr-no        ) InsBBR=No         ; shift ;;
+    --flood-yes     ) InsFlood=Yes      ; shift ;;
+    --flood-no      ) InsFlood=No       ; shift ;;
+    --rdp-vnc       ) InsRDP=VNC        ; shift ;;
+    --rdp-x2go      ) InsRDP=X2Go       ; shift ;;
+    --rdp-no        ) InsRDP=No         ; shift ;;
     --wine-yes      ) InsWine=yes       ; shift ;;
     --wine-no       ) InsWine=no        ; shift ;;
-    --tools-yes     ) InsTools="Yes"    ; shift ;;
-    --tools-no      ) InsTools="No"     ; shift ;;
+    --tools-yes     ) InsTools=Yes      ; shift ;;
+    --tools-no      ) InsTools=No       ; shift ;;
     --flexget-yes   ) InsFlex=yes       ; shift ;;
     --flexget-no    ) InsFlex=no        ; shift ;;
     --rclone-yes    ) InsRclone=yes     ; shift ;;
     --rclone-no     ) InsRclone=no      ; shift ;;
-    --tweaks-yes    ) UseTweaks="Yes"   ; shift ;;
-    --tweaks-no     ) UseTweaks="No"    ; shift ;;
+    --tweaks-yes    ) UseTweaks=Yes     ; shift ;;
+    --tweaks-no     ) UseTweaks=No      ; shift ;;
     --mt-single     ) MAXCPUS=1         ; shift ;;
     --mt-double     ) MAXCPUS=2         ; shift ;;
     --mt-max        ) MAXCPUS=$(nproc)  ; shift ;;
@@ -77,7 +77,6 @@ while [ -n "$1" ] ; do case "$1" in
     -- ) shift ; break ;;
 esac ; done
 
-[[ $DeBUG == 1 ]] && { iUser=aniverse ; aptsources=No ; MAXCPUS=$(nproc) ; }
 # --------------------------------------------------------------------------------
 [[ -z $iBranch ]] && iBranch=$default_branch
 times=$(cat /log/inexistence/iUser.txt 2>/dev/null | wc -l)
@@ -606,13 +605,13 @@ while [[ -z $aptsources ]]; do
     read -ep "${bold}${yellow}Would you like to change sources list?${normal}  [Y]es or [${cyan}N${normal}]o: " responce
   # echo -ne "${bold}${yellow}Would you like to change sources list?${normal} [Y]es or [${cyan}N${normal}]o: " ; read -e responce
     case $responce in
-        [yY] | [yY][Ee][Ss]  ) aptsources=Yes ;;
-        [nN] | [nN][Oo] | "" ) aptsources=No ;;
-        *                    ) aptsources=No ;;
+        [yY] | [yY][Ee][Ss] | "" ) aptsources=yes ;;
+        [nN] | [nN][Oo]          ) aptsources=no  ;;
+        *                        ) aptsources=yes ;;
     esac
 done
 
-if [[ $aptsources == Yes ]]; then
+if [[ $aptsources == yes ]]; then
     echo "${bold}${baiqingse}/etc/apt/sources.list${normal} ${bold}will be replaced${normal}"
 else
     echo "${baizise}/etc/apt/sources.list will ${baihongse}not${baizise} be replaced${normal}"
@@ -1522,12 +1521,12 @@ function preparation() {
 mkdir -p $LogBase/app $SourceLocation $LockLocation $LogLocation $DebLocation $WebROOT/h5ai/$iUser
 echo $iUser >> $LogBase/iUser.txt
 
-if [[ $aptsources == Yes ]] && [[ $CODENAME != jessie ]]; then
+if [[ $aptsources == yes ]] && [[ $CODENAME != jessie ]]; then
     cp /etc/apt/sources.list /etc/apt/sources.list."$(date "+%Y%m%d.%H%M")".bak
     wget --no-check-certificate -O /etc/apt/sources.list ${repo}/raw/$iBranch/00.Installation/template/$DISTROL.apt.sources
     sed -i "s/RELEASE/$CODENAME/g" /etc/apt/sources.list
     [[ $DISTROL == debian ]] && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 5C808C2B65558117
-elif [[ $aptsources == Yes ]] && [[ $CODENAME == jessie ]]; then
+elif [[ $aptsources == yes ]] && [[ $CODENAME == jessie ]]; then
     cp /etc/apt/sources.list /etc/apt/sources.list."$(date "+%Y%m%d.%H%M")".bak
     echo 'Acquire::Check-Valid-Until 0;' > /etc/apt/apt.conf.d/10-no-check-valid-until
     cat > /etc/apt/sources.list << EOF
@@ -2442,7 +2441,7 @@ mv /etc/00.preparation.log $LogLocation/00.preparation.log
 ######################################################################################################
 
 [[ $InsBBR == Yes || $InsBBR == To\ be\ enabled ]] && {
-echo -ne "Configuring BBR ..." ; install_bbr 2>&1 | tee $LogLocation/02.bbr.log ; }
+echo -e "Configuring BBR ..." ; install_bbr 2>&1 | tee $LogLocation/02.bbr.log ; }
 
 if [[ -n $lt_version ]] && [[ $lt_version != system ]]; then
     if [[ $DeBUG == 2 ]]; then # disable this for now
@@ -2473,8 +2472,8 @@ if [[ $qb_version != No ]]; then
 fi
 
 if [[ $de_version != No ]]; then
-    echo -ne "Installing Deluge ... \n" ; install_deluge 2>&1 | tee $LogLocation/03.de1.log
-    echo -ne "Configuring Deluge ... \n" ; config_deluge > /dev/null 2>&1 # | tee $LogLocation/04.de2.log
+    echo -e "Installing Deluge ... " ; install_deluge >> $LogLocation/03.de1.log 2>&1
+    echo -e "Configuring Deluge ..." ; config_deluge > /dev/null 2>&1 # | tee $LogLocation/04.de2.log
 fi
 
 [[ $rt_version != No ]] && { echo -ne "Installing rTorrent ... \n\n\n" ; install_rtorrent 2>&1 | tee $LogLocation/07.rt.log
@@ -2482,7 +2481,7 @@ fi
 
 [[ $tr_version != No ]] && {
 echo -ne "Installing Transmission ... \n\n\n" ; install_transmission 2>&1 | tee $LogLocation/08.tr1.log
-echo -ne "Configuring Transmission ... "      ; config_transmission 2>&1  | tee $LogLocation/09.tr2.log ; }
+echo -ne "Configuring Transmission ... "      ; config_transmission  2>&1 | tee $LogLocation/09.tr2.log ; }
 
 [[ $InsFlex   == yes ]]  && { bash $local_packages/package/flexget/install   --logbase $LogTimes --system
                               bash $local_packages/package/flexget/configure --logbase $LogTimes --system -u $iUser -p $iPass -w 6566 ; }
