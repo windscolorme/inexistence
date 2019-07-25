@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 
-script_update=2019.07.15
-script_version=r10025
+script_update=2019.07.25
+script_version=r10026
 
 ################################################################################################ Debug
 
@@ -92,6 +92,20 @@ AvailableVersion=$(  wget -qO- $DeSource | grep -o "deluge-[0-9]\{1,2\}\.[0-9]\{
 [[ -n $version ]] && version_ge $version 2.0 && version_ge $lt_ver 1.1.3 ||
 { echo -e "${CW} libtorrent-rasterbar 1.1.3 and later is required when installing deluge 2.0 and above${normal}" && exit 1 ; }
 
+[[ -n $version ]] && version_s=$version
+[[ -n $branch  ]] && version_s=$(wget -qO- https://raw.githubusercontent.com/qbittorrent/qBittorrent/$branch/dist/windows/options.nsi |grep -i "define PROG_VERSION" | grep -oE [0-9].[0-9.]+)
+
+
+#version=$( apt-cache policy deluge | grep -B1 http | grep -Eo "[012]\.[0-9]+.[0-9]+" | head -n1 )
+
+ppa_version=2.0.3
+if   [[ $CODENAME == jessie  ]]; then repo_version=1.3.10 ; ppa_version=1.3.15
+elif [[ $CODENAME == stretch ]]; then repo_version=1.3.13
+elif [[ $CODENAME == buster  ]]; then repo_version=1.3.15
+elif [[ $CODENAME == xenial  ]]; then repo_version=1.3.12
+elif [[ $CODENAME == bionic  ]]; then repo_version=1.3.15
+fi
+
 ################################################################################################ Sub Functions
 
 
@@ -107,9 +121,10 @@ function install_deluge_dependencies() {
     intltool geoip-database librsvg2-common xdg-utils \
     >> $OutputLOG 2>&1 && touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock
 
-    # This is for deluge 2.0
-    pip install --upgrade pip >> $OutputLOG 2>&1
-    /usr/local/bin/pip install --upgrade twisted  >> $OutputLOG 2>&1 # pillow rencode pyopenssl
+    if version_ge $version 2.0
+        pip install --upgrade pip >> $OutputLOG 2>&1
+        /usr/local/bin/pip install --upgrade twisted >> $OutputLOG 2>&1 # pillow rencode pyopenssl
+    fi
 
     [[ -f /tmp/$status_lock.1.lock ]] && touch $LOCKLocation/$AppNameLower.dependencies.lock
     echo >> $OutputLOG
@@ -146,12 +161,11 @@ function install_deluge_source() {
     fetch_source_codes
 
     if [[ -n $(which fpm) ]]; then
-        fpm --description "A lightweight, free, cross-platform BitTorrent client, installed by inexistence" \
-            -C $SCLocation/tmp-$AppNameLower -n $DebName -v $version \
-            -p $DebLocation/$DebName-$version-$CODENAME-$arch.deb \
-            --python-setup-py-arguments=--install-layout=deb \
-            -a native -m aniverse -f -s python -t deb /tmp/deluge/setup.py >> $OutputLOG 2>&1
-        dpkg -i $DebLocation/$DebName-$version-$CODENAME-$arch.deb >> $OutputLOG 2>&1 && touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock
+        fpm -n $DebName -v $version_s -a native -m aniverse -f -s python -t deb \
+            -p $DebLocation/$DebName-$version_s-$CODENAME-$arch.deb \
+            --description "Deluge BitTorrent client, installed by inexistence" \
+            --python-setup-py-arguments=--install-layout=deb  setup.py >> $OutputLOG 2>&1
+        dpkg -i $DebLocation/$DebName-$version_s-$CODENAME-$arch.deb >> $OutputLOG 2>&1 && touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock
     else
         python setup.py build >> $OutputLOG 2>&1
         python setup.py install --install-layout=deb --record $SCLocation/install.deluge.filelist.txt >> $OutputLOG 2>&1
@@ -161,20 +175,17 @@ function install_deluge_source() {
 
     echo >> $OutputLOG
     [[ -f /tmp/$status_lock.1.lock ]] && touch $LOCKLocation/deluge.lock
-    [[ -f /tmp/$status_lock.1.lock ]] && touch $LOCKLocation/deluge.source.$version.LOCKLocation
+    [[ -f /tmp/$status_lock.1.lock ]] && touch $LOCKLocation/deluge.source.$version_s.LOCKLocation
 
 }
 
 
 
-
-
-
 function install_deluge_ppa() {
-
+    echo >> $OutputLOG
     status_lock=$AppNameLower
     echo "status_lock=$status_lock" > /tmp/Variables
-    rm -f /tmp/$status_lock.1.lock /tmp/$status_lock.2.lock 
+    rm -f /tmp/$status_lock.1.lock /tmp/$status_lock.2.lock
 
     add-apt-repository -y ppa:deluge-team/ppa         >> $OutputLOG 2>&1
     apt-get update                                    >> $OutputLOG 2>&1
@@ -183,63 +194,49 @@ function install_deluge_ppa() {
 
     [[ -f /tmp/$status_lock.1.lock ]] && touch $LOCKLocation/${AppNameLower}{,.apt,.ppa}.lock
     echo >> $OutputLOG
-
 }
-
 
 
 
 function install_deluge_apt() {
+    echo >> $OutputLOG
+    status_lock=$AppNameLower
+    echo "status_lock=$status_lock" > /tmp/Variables
+    rm -f /tmp/$status_lock.1.lock /tmp/$status_lock.2.lock
 
     apt-get install -y deluge deluged deluge-web deluge-console deluge-gtk \
-    >> $OutputLOG 2>&1 && touch /tmp/de.1.lock || touch /tmp/de.2.lock
+    >> $OutputLOG 2>&1 && touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock
 
-[[ -f /tmp/de.1.lock ]] && touch $LOCKLocation/deluge.lock
-[[ -f /tmp/de.1.lock ]] && touch $LOCKLocation/deluge.apt.lock ; }
-
-[[ $mode == apt ]] && {
-version=$( apt-cache policy deluge | grep -B1 http | grep -Eo "[012]\.[0-9]+.[0-9]+" | head -n1 )
-[[ -z $version ]] && {
-[[ $CODENAME == bionic ]] && version=1.3.15 ; [[ $CODENAME == xenial ]] && version=1.3.12 ; [[ $CODENAME == trusty ]] && version=1.3.6
-[[ $CODENAME == buster ]] && version=1.3.15 ; [[ $CODENAME == stretch ]] && version=1.3.13 ; [[ $CODENAME == jessie ]] && version=1.3.10 ; }
+    [[ -f /tmp/$status_lock.1.lock ]] && touch $LOCKLocation/${AppNameLower}{,.apt,}.lock
+    echo >> $OutputLOG
 }
 
 
 
 
-
-mkdir -p $SCLocation $LOCKLocation
-cd       $SCLocation
-echo "\n\n\n$(date "+%Y.%m.%d.%H.%M.%S")   $RN\n\n\n" >> $OutputLOG
-
 case $mode in
-    apt     ) echo -ne "Installing deluge ${bold}${cyan}$version${normal} from repository ..."       | tee -a $OutputLOG ; install_deluge_apt & spinner $!
+    apt     ) echo -ne "Installing deluge ${bold}${cyan}$repo_version${normal} from repository ..."       | tee -a $OutputLOG ;
+              install_deluge_apt & spinner $!
+              check_status | tee -a $OutputLOG
               ;;
 
-    ppa     ) echo -ne "Installing deluge ${bold}${cyan}$latest_stable${normal} from stable ppa ..." | tee -a $OutputLOG ; install_deluge_ppa & spinner $!
+    ppa     ) echo -ne "Installing deluge ${bold}${cyan}$ppa_version${normal} from stable ppa ..." | tee -a $OutputLOG
+              install_deluge_ppa & spinner $!
+              check_status | tee -a $OutputLOG
               ;;
 
-    source  ) [[ ! -f $LOCKLocation/deluge.dependencies.lock ]] && {
+    source  ) # [[ ! -f $LOCKLocation/deluge.dependencies.lock ]] && {
               echo -ne "Installing deluge build dependencies ..." | tee -a $OutputLOG
               install_deluge_dependencies & spinner $!
-              _check_status ded ; }
+              _check_status ded
 
-              echo -ne "Installing deluge ${bold}${cyan}$version${normal} from source codes ..."     | tee -a $OutputLOG
+              echo -ne "Installing deluge ${bold}${cyan}$version_s${normal} from source codes ..."     | tee -a $OutputLOG
               install_deluge_source & spinner $!
-              ;;
-
-    alt     ) [[ ! -f $LOCKLocation/deluge.dependencies.lock ]] && {
-              echo -ne "Installing deluge build dependencies ..." | tee -a $OutputLOG
-              install_deluge_dependencies & spinner $!
-              _check_status ded ; }
-
-              echo -ne "Installing another deluge ${bold}${cyan}$version${normal} from source codes ..." | tee -a $OutputLOG 
-              install_deluge_alt & spinner $!
               ;;
 esac
 
 cd
-check_status de
+
 
 [[ $LogTimes == none ]] && rm -rf /tmp/ttmmpp
 
