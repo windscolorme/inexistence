@@ -292,7 +292,8 @@ function compile_qbittorrent() {
         fpm -C $SCLocation/tmp-$AppNameLower -n $DebName -v $version_s \
             -p $DebLocation/$DebName-$version_s-$CODENAME-$arch.deb \
             -s dir -t deb -a native -m aniverse -f --description \
-            "qBittorrent client (without X support), installed by inexistence" >> $OutputLOG 2>&1
+            "qBittorrent client (without X support), installed by inexistence" \
+            >> $OutputLOG 2>&1
         dpkg -i $DebLocation/$DebName-$version_s-$CODENAME-$arch.deb >> $OutputLOG 2>&1 # && touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock
     fi
 
