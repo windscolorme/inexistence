@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 #
-script_update=2019.07.22
-script_version=r20010
+script_update=2019.07.28
+script_version=r21011
 ################################################################################################
 
 usage_guide() {
@@ -182,8 +182,8 @@ EOF
 # Online／OneProvider Paris 独服，Ubuntu 16.04，Debian 8/9/10
 function online_interfaces() {
     file_backup
-    if [[ ! $(grep -q "iface $interface inet6 static" /etc/network/interfaces) ]] || [[ $force == 1 ]] ; then
-        [[ $force == 1 ]] && interfaces_file_clean
+    if [[ ! $(grep -q "iface $interface inet6 static" /etc/network/interfaces) ]]; then
+        interfaces_file_clean
         online_interface_file_mod
     fi
     cat << EOF > /etc/dhcp/dhclient6.conf
@@ -203,13 +203,13 @@ function online_netplan() {
     check_var
     file_backup
 
-cat << EOF > /etc/dhcp/dhclient6.conf
+    cat << EOF > /etc/dhcp/dhclient6.conf
 interface "$interface" {
   send dhcp6.client-id $DUID;
   request;
 }
 EOF
-cat << EOF > /etc/systemd/system/dhclient.service
+    cat << EOF > /etc/systemd/system/dhclient.service
 [Unit]
 Description=dhclient for sending DUID IPv6
 Wants=network.target
@@ -220,7 +220,7 @@ ExecStart=/sbin/dhclient -cf /etc/dhcp/dhclient6.conf -6 -P -v $interface
 [Install]
 WantedBy=multi-user.target
 EOF
-cat << EOF > /etc/systemd/system/dhclient-netplan.service
+    cat << EOF > /etc/systemd/system/dhclient-netplan.service
 [Unit]
 Description=redo netplan apply after dhclient
 Wants=dhclient.service
@@ -232,7 +232,7 @@ ExecStart=/usr/sbin/netplan apply
 [Install]
 WantedBy=dhclient.service
 EOF
-cat << EOF >> /etc/netplan/01-netcfg.yaml
+    cat << EOF >> /etc/netplan/01-netcfg.yaml
       dhcp6: no
       accept-ra: yes
       addresses:
@@ -245,6 +245,60 @@ EOF
     systemctl enable dhclient.service
     systemctl enable dhclient-netplan.service
 }
+
+
+function dibbler_install() {
+    dpkg-query -W -f='${Status}' build-essential 2>/dev/null | grep -q "ok installed" && apt-get install -y build-essential
+    wget https://netix.dl.sourceforge.net/project/dibbler/dibbler/1.0.1/dibbler-1.0.1.tar.gz
+    tar zxvf dibbler-1.0.1.tar.gz
+    cd dibbler-1.0.1
+    ./configure
+    make
+    make install
+}
+
+
+function online_dibbler_action() {
+    mkdir -p /var/lib/dibbler    /etc/dibbler/
+    echo "$DUID" > /var/lib/dibbler/client-duid
+    cat << EOF > /etc/dibbler/client.conf
+log-level 7
+duid-type duid-ll
+inactive-mode
+
+iface $interface {
+pd
+}
+EOF
+    file_backup
+    interfaces_file_clean
+    cat << EOF >> /etc/network/interfaces
+### Added by IPv6_Script ###
+iface eth0 inet6 static
+address $IPv6
+netmask $subnet
+### IPv6_Script END ###
+EOF
+    cat << EOF > /etc/systemd/system/dibbler-client.service
+[Unit]
+Description=Dibbler Client
+After=networking.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/dibbler-client start
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    systemctl enable dibbler-client.service
+}
+
+
+
+check_var
+dibbler_install
+online_dibbler_action
 
 ###########################################################################
 
@@ -304,13 +358,13 @@ ping6 -c 5 ipv6.google.com"
 ###########################################################################
 
 
-
 case $mode in
     rh  ) standard_interfaces ; ipv6_test ;;
     ik  ) ikoula_interfaces   ; ipv6_test ;;
     ik2 ) ikoula_netplan      ; ipv6_test ;;
     ol  ) online_interfaces   ; ipv6_test ;;
     ol2 ) online_netplan      ; ipv6_test ;;
+    ol3 ) online_netplan      ; ipv6_test ;;
     t   ) info ; ipv6_test ;;
 esac
 
