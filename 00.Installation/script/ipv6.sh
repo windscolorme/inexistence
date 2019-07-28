@@ -4,7 +4,7 @@
 # Author: Aniverse
 #
 script_update=2019.07.28
-script_version=r21011
+script_version=r21012
 ################################################################################################
 
 usage_guide() {
@@ -13,8 +13,8 @@ bash <(wget -qO- https://github.com/Aniverse/inexistence/raw/master/00.Installat
 
 ################################################################################################ Get options
 
-OPTS=$(getopt -o m:d:s:6: --long mode:,ipv6:,duid:,subnet:"" -- "$@")
-
+OPTS=$(getopt -o m:d:s:6:r --long "mode:,ipv6:,duid:,subnet:,reboot" -- "$@")
+[ ! $? = 0 ] && { echo -e "Invalid option" ; exit 1 ; }
 eval set -- "$OPTS"
 
 while true; do
@@ -23,6 +23,7 @@ while true; do
     -6 | --ipv6   ) IPv6="$2"   ; shift 2 ;;
     -d | --duid   ) DUID="$2"   ; shift 2 ;;
     -s | --subnet ) subnet="$2" ; shift 2 ;;
+    -r | --reboot ) reboot=1    ; shift   ;;
      * ) break ;;
   esac
 done
