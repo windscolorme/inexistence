@@ -4,7 +4,7 @@
 # Author: Aniverse
 #
 script_update=2019.07.28
-script_version=r21013
+script_version=r21014
 ################################################################################################
 
 usage_guide() {
@@ -349,10 +349,10 @@ function sysctl_enable_ipv6() {
 
 function ask_reboot() {
     if [[ $reboot == no ]]; then
-        echo -e "Press ${on_red}Ctrl+C${normal} ${bold}to exit${jiacu}, or press ${bailvse}ENTER${normal} ${bold}to reboot"
+        echo -ne "Press ${on_red}Ctrl+C${normal} ${bold}to exit${jiacu}, or press ${bailvse}ENTER${normal} ${bold}to reboot"
         read input
     fi
-    echo -e "\n${bold}Rebooting ... ${bold}"
+  # echo -e "\n${bold}Rebooting ... ${normal}"
     reboot -f
     init 6
 }
@@ -373,7 +373,7 @@ IPv6=$IPv6
 DUID=$DUID
 subnet=$subnet
 "
-    echo -e "\n${yellow}cat /etc/network/interfaces${normal}\n"
+    echo -e "${yellow}cat /etc/network/interfaces${normal}\n"
     cat /etc/network/interfaces     2>/dev/null
     echo -e "\n${yellow}cat /etc/netplan/01-netcfg.yaml${normal}\n"
     cat /etc/netplan/01-netcfg.yaml 2>/dev/null
@@ -390,7 +390,7 @@ ping6 -c 5 ipv6.google.com"
 case $mode in
     ik  ) ikoula_interfaces   ; ipv6_test  ;;
     ik2 ) ikoula_netplan      ; ipv6_test  ;;
-    ol  ) online_interfaces   ; ipv6_test  ;; ask_reboot ;;
+    ol  ) online_interfaces   ; ipv6_test  ;  ask_reboot ;;
     ol2 ) online_netplan      ; ipv6_test  ;;
     ol3 ) online_dibbler      ; ask_reboot ;;
     t   ) info ; ipv6_test ;;
