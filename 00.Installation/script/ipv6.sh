@@ -4,7 +4,7 @@
 # Author: Aniverse
 #
 script_update=2019.07.28
-script_version=r21012
+script_version=r21013
 ################################################################################################
 
 usage_guide() {
@@ -12,6 +12,8 @@ s=/usr/local/bin/ipv66;rm -f $s;nano $s;chmod 755 $s
 bash <(wget -qO- https://github.com/Aniverse/inexistence/raw/master/00.Installation/script/ipv6.sh) -m online-netplan -6 XXX -d XXX -s 56 ; }
 
 ################################################################################################ Get options
+
+reboot=no
 
 OPTS=$(getopt -o m:d:s:6:r --long "mode:,ipv6:,duid:,subnet:,reboot" -- "$@")
 [ ! $? = 0 ] && { echo -e "Invalid option" ; exit 1 ; }
@@ -23,7 +25,7 @@ while true; do
     -6 | --ipv6   ) IPv6="$2"   ; shift 2 ;;
     -d | --duid   ) DUID="$2"   ; shift 2 ;;
     -s | --subnet ) subnet="$2" ; shift 2 ;;
-    -r | --reboot ) reboot=1    ; shift   ;;
+    -r | --reboot ) reboot=yes  ; shift   ;;
      * ) break ;;
   esac
 done
@@ -296,12 +298,17 @@ EOF
 }
 
 
+function online_dibbler() {
+    check_var
+    dibbler_install
+    online_dibbler_action
+}
 
-check_var
-dibbler_install
-online_dibbler_action
+
 
 ###########################################################################
+
+
 
 function file_backup() {
     mkdir -p /log/script
@@ -340,11 +347,32 @@ function sysctl_enable_ipv6() {
     echo "net.ipv6.conf.$interface.autoconf=0" >> /etc/sysctl.conf
 }
 
+function ask_reboot() {
+    if [[ $reboot == no ]]; then
+        echo -e "Press ${on_red}Ctrl+C${normal} ${bold}to exit${jiacu}, or press ${bailvse}ENTER${normal} ${bold}to reboot"
+        read input
+    fi
+    echo -e "\n${bold}Rebooting ... ${bold}"
+    reboot -f
+    init 6
+}
+
 function info() {
     echo -e "
+script_update=$script_update
+script_version=$script_version
+
+DISTRO=$DISTRO
+CODENAME=$CODENAME
 IPv4=$serveripv4
 interface=$interface
-mode=$mode   type=$type"
+mode=$mode   type=$type
+reboot=$reboot
+
+IPv6=$IPv6
+DUID=$DUID
+subnet=$subnet
+"
     echo -e "\n${yellow}cat /etc/network/interfaces${normal}\n"
     cat /etc/network/interfaces     2>/dev/null
     echo -e "\n${yellow}cat /etc/netplan/01-netcfg.yaml${normal}\n"
@@ -360,12 +388,11 @@ ping6 -c 5 ipv6.google.com"
 
 
 case $mode in
-    rh  ) standard_interfaces ; ipv6_test ;;
-    ik  ) ikoula_interfaces   ; ipv6_test ;;
-    ik2 ) ikoula_netplan      ; ipv6_test ;;
-    ol  ) online_interfaces   ; ipv6_test ;;
-    ol2 ) online_netplan      ; ipv6_test ;;
-    ol3 ) online_netplan      ; ipv6_test ;;
+    ik  ) ikoula_interfaces   ; ipv6_test  ;;
+    ik2 ) ikoula_netplan      ; ipv6_test  ;;
+    ol  ) online_interfaces   ; ipv6_test  ;; ask_reboot ;;
+    ol2 ) online_netplan      ; ipv6_test  ;;
+    ol3 ) online_dibbler      ; ask_reboot ;;
     t   ) info ; ipv6_test ;;
 esac
 
