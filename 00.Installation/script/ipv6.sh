@@ -4,7 +4,7 @@
 # Author: Aniverse
 #
 script_update=2019.07.28
-script_version=r21014
+script_version=r21015
 ################################################################################################
 
 usage_guide() {
@@ -256,8 +256,11 @@ function dibbler_install() {
     tar zxvf dibbler-1.0.1.tar.gz
     cd dibbler-1.0.1
     ./configure
-    make
+    make -j$(nproc)
     make install
+    cd ..
+    rm -rf dibble*
+    [[ ! -f /usr/local/sbin/dibbler-client ]] && echo -e "\nError: No dibbler-client found!\n" && exit 1
 }
 
 
@@ -276,8 +279,9 @@ EOF
     file_backup
     interfaces_file_clean
     cat << EOF >> /etc/network/interfaces
+
 ### Added by IPv6_Script ###
-iface eth0 inet6 static
+iface $interface inet6 static
 address $IPv6
 netmask $subnet
 ### IPv6_Script END ###
@@ -349,7 +353,7 @@ function sysctl_enable_ipv6() {
 
 function ask_reboot() {
     if [[ $reboot == no ]]; then
-        echo -ne "Press ${on_red}Ctrl+C${normal} ${bold}to exit${jiacu}, or press ${bailvse}ENTER${normal} ${bold}to reboot"
+        echo -ne "Press ${on_red}Ctrl+C${normal} ${bold}to exit${jiacu}, or press ${bailvse}ENTER${normal} ${bold}to reboot${normal} "
         read input
     fi
   # echo -e "\n${bold}Rebooting ... ${normal}"
