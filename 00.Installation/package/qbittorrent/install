@@ -4,7 +4,7 @@
 # Author: Aniverse
 
 script_update=2019.09.09
-script_version=r11018
+script_version=r11019
 
 ################################################################################################ Debug
 
@@ -104,7 +104,7 @@ fi
 ################################################################################################ Sub functions
 
 function install_qbittorrent_apt() {
-    echo >> $OutputLOG
+    lines2 >> $OutputLOG
     status_lock=$AppNameLower
     echo "status_lock=$status_lock" > /tmp/Variables
     rm -f /tmp/$status_lock.1.lock /tmp/$status_lock.2.lock
@@ -115,6 +115,7 @@ function install_qbittorrent_apt() {
 
 
 function install_qbittorrent_ppa() {
+    lines2 >> $OutputLOG
     status_lock=$AppNameLower
     echo "status_lock=$status_lock" > /tmp/Variables
     rm -f /tmp/$status_lock.1.lock /tmp/$status_lock.2.lock 
@@ -209,14 +210,14 @@ EOF
 
 function install_qt_deb() {
     apt-get install -y build-essential libgl1-mesa-dev python3-dev python
-    wget https://sourceforge.net/projects/inexistence/files/deb/$CODENAME/qt-common.5.9.8.$CODENAME.amd64.deb/download -O qt.5.9.8.deb >> $OutputLOG 2>&1 ||
+    wget -nv https://sourceforge.net/projects/inexistence/files/deb/$CODENAME/qt-common.5.9.8.$CODENAME.amd64.deb/download -O qt.5.9.8.deb >> $OutputLOG 2>&1 ||
     { echo -e "${CW} Failed to wget qt deb${normal}" ; exit 1 ; }
     dpkg -i qt.5.9.8.deb && ldconfig
 }
 
 
 function install_qbittorrent_dependencies() {
-    echo >> $OutputLOG
+    lines2 >> $OutputLOG
 
     # https://launchpad.net/~ubuntu-toolchain-r/+archive/ubuntu/test
     # https://launchpad.net/~beineri/+archive/ubuntu/opt-qt597-trusty
@@ -259,7 +260,7 @@ function install_qbittorrent_dependencies() {
 
 
 function compile_qbittorrent() {
-    echo >> $OutputLOG
+    lines2 >> $OutputLOG
     rm -rf qBittorrent.*
 
     if [[ -n $branch ]]; then

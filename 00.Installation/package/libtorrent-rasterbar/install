@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 #
-script_update=2019.07.25
-script_version=r11051
+script_update=2019.09.09
+script_version=r11052
 
 ################################################################################################ Debug
 
@@ -98,7 +98,7 @@ echo $version | grep -qEo "[012]\.[0-9]+\.[0-9]+" && branch=$( echo libtorrent-$
 
 # Install build dependencies for libtorrent-rasterbar
 function install_lt_dependencies() {
-    echo >> $OutputLOG
+    lines2 >> $OutputLOG
     status_lock=$AppNameLower-d
     echo "status_lock=$status_lock" > /tmp/Variables
     rm -f /tmp/$status_lock.1.lock /tmp/$status_lock.2.lock
@@ -121,7 +121,7 @@ function install_lt_dependencies() {
 # Install from source codes
 function install_lt_source() {
 
-    echo >> $OutputLOG
+    lines2 >> $OutputLOG
     status_lock=$AppNameLower
     echo "status_lock=$status_lock" > /tmp/Variables
     rm -f /tmp/$status_lock.1.lock /tmp/$status_lock.2.lock
@@ -195,7 +195,7 @@ function install_lt_source() {
 
 # Install from pre-compiled deb package (libtorrent-rasterbar8, based on RC_1_0 #62c96797a06a024dc17a44931c19afe6f7bd7d6c with python-binding fix)
 function install_lt8_deb() {
-    echo >> $OutputLOG
+    lines2 >> $OutputLOG
     status_lock=$AppNameLower
     echo "status_lock=$status_lock" > /tmp/Variables
     rm -f /tmp/$status_lock.1.lock /tmp/$status_lock.2.lock
@@ -217,12 +217,12 @@ function install_lt8_deb() {
 # libtorrent-rasterbar9, based on RC_1_1 6f1250c6535730897909240ea0f4f2a81937d21a
 # with python-binding fix (from amefs) and #5a48292aefd6ebffd5be6b237081ba2d978a2caa fix (Announce only once to private trackers, by Airium)
 function install_lt9_deb() {
-    echo >> $OutputLOG
+    lines2 >> $OutputLOG
     status_lock=$AppNameLower
     echo "status_lock=$status_lock" > /tmp/Variables
     rm -f /tmp/$status_lock.1.lock /tmp/$status_lock.2.lock
 
-    wget -O lt.$CODENAME.1.1.13.deb https://raw.githubusercontent.com/Aniverse/inexistence/files/debian.package/libtorrent-rasterbar-1.1.13.1.$CODENAME.amd64.cpp11.deb >> $OutputLOG 2>&1
+    wget -nv -O lt.$CODENAME.1.1.13.deb https://raw.githubusercontent.com/Aniverse/inexistence/files/debian.package/libtorrent-rasterbar-1.1.13.1.$CODENAME.amd64.cpp11.deb >> $OutputLOG 2>&1
     dpkg -i lt.$CODENAME.1.1.13.deb >> $OutputLOG 2>&1 && touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock
 
     echo >> $OutputLOG
@@ -247,15 +247,15 @@ function install_lt_dependencies_action() {
 
 
 case $mode in
-    deb     ) install_lt_dependencies_action
+    deb     ) install_lt_dependencies_action ; version=1.0.11
 
-              echo -ne "Installing libtorrent-rasterbar ${bold}${cyan}1.0.11${normal} from pre-compiled deb package ..." | tee -a $OutputLOG
+              echo -ne "Installing libtorrent-rasterbar ${bold}${cyan}$version${normal} from pre-compiled deb package ..." | tee -a $OutputLOG
               install_lt8_deb & spinner $!
               ;;
 
-    deb2    ) install_lt_dependencies_action
+    deb2    ) install_lt_dependencies_action ; version=1.1.13
 
-              echo -ne "Installing libtorrent-rasterbar ${bold}${cyan}1.1.13${normal} from pre-compiled deb package ..." | tee -a $OutputLOG
+              echo -ne "Installing libtorrent-rasterbar ${bold}${cyan}$version${normal} from pre-compiled deb package ..." | tee -a $OutputLOG
               install_lt9_deb & spinner $!
               ;;
 
