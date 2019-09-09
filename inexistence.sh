@@ -16,8 +16,8 @@ export PATH
 SYSTEMCHECK=1
 DeBUG=0
 script_lang=eng
-INEXISTENCEVER=1.1.3.13
-INEXISTENCEDATE=2019.07.22
+INEXISTENCEVER=1.1.4.0
+INEXISTENCEDATE=2019.09.09
 default_branch=master
 # --------------------------------------------------------------------------------
 
@@ -73,6 +73,7 @@ while [ -n "$1" ] ; do case "$1" in
     --mt-double     ) MAXCPUS=2         ; shift ;;
     --mt-max        ) MAXCPUS=$(nproc)  ; shift ;;
     --mt-half       ) MAXCPUS=$(echo "$(nproc) / 2"|bc)  ; shift ;;
+    --no-ad         ) opt_no_ad=1       ; shift ;;
 
     -- ) shift ; break ;;
 esac ; done
@@ -207,6 +208,35 @@ fi ; }
 # Ctrl+C 时恢复样式
 cancel() { echo -e "${normal}" ; reset -w ; exit ; }
 trap cancel SIGINT
+
+# 万恶的广告
+function ask_ad() {
+    echo -ne "${bold}
+${green}Yes ${normal}${bold} 啥玩意儿？${normal}${bold}
+${red}No  ${normal}${bold} 与我何干？${normal}${bold}
+${yellow}作者有个过气盒子没人要了，大佬有兴趣看看嘛？${normal}[y/${red}N${normal}] "
+    read -e responce
+    case $responce in
+        [yY] | [yY][Ee][Ss]  ) if_show_ad_detail=yes ;;
+        [nN] | [nN][Oo] | "" ) if_show_ad_detail=no  ;;
+        *                    ) if_show_ad_detail=no  ;;
+    esac
+    if [[ $if_show_ad_detail == yes ]]; then
+        show_ad_detail
+    else
+        echo -e "好吧，当我没问……\n"
+    fi
+}
+
+function show_ad_detail() {
+    echo ; printf "%-70s\n" "-" | sed 's/\s/-/g'
+    wget -qO- https://raw.githubusercontent.com/Aniverse/advertisement/master/ad_1
+    printf "%-70s\n" "-" | sed 's/\s/-/g' ; echo
+}
+
+[[ $opt_no_ad == 1 ]] && advertisement=disable
+[[ $advertisement == enable ]] && remote_ad_status=$(wget -qO- https://raw.githubusercontent.com/Aniverse/advertisement/master/ad_status)
+[[ $remote_ad_status == enable ]] && ask_ad
 
 # --------------------------------------------------------------------------------
 # 快速跳转
@@ -370,6 +400,7 @@ echo -e "${bold}Checking bittorrent clients' version ...${normal}"
 _check_install_2
 _client_version_check
 
+# 真的去检查的还是慢了点，直接写死更简单些。。。
 if [[ $CODENAME == bionic ]];then
     QB_repo_ver=4.0.3
     TR_repo_ver=2.92
@@ -392,7 +423,7 @@ elif [[ $CODENAME == jessie ]];then
     DE_repo_ver=1.3.10
 fi
 
-QB_latest_ver=4.1.6
+QB_latest_ver=4.1.7
 DE_latest_ver=1.3.15 # 2.0.3 is not available for Stable PPA
 TR_latest_ver=2.94
 
@@ -418,7 +449,7 @@ echo -e  "  Virt      : ${cyan}$virt${normal}"
 
 [[ $times != 1 ]] && echo -e "\n${bold}It seems this is the $times times you run this script${normal}"
 [[ $SYSTEMCHECK != 1 ]] && echo -e "\n${bold}${red}System Checking Skipped. $lang_note_that this script may not work on unsupported system${normal}"
-[[ ${virt} != "No Virtualization Detected" ]] && [[ ${virt} != "KVM" ]] && echo -e "\n${bold}${red}这个脚本没有在非 KVM 的 VPS 测试过，不保证 OpenVZ、HyperV、Xen、Lxc 等架构下一切正常${normal}"
+[[ ${virt} != "No Virtualization Detected" ]] && [[ ${virt} != "KVM" ]] && echo -e "\n${bold}${red}这个脚本没有在非 KVM 的 VPS 测试过，不保证在 OpenVZ、HyperV、Xen、Lxc 等架构下一切正常${normal}"
 
 echo
 echo -e "${bold}For more information about this script,\nplease refer README on GitHub (Chinese only)"
@@ -696,6 +727,7 @@ while [[ -z $qb_version ]]; do
     echo -e "${green}03)${normal} qBittorrent ${cyan}4.0.4${normal}"
     echo -e "${green}04)${normal} qBittorrent ${cyan}4.1.3${normal}"
     echo -e "${green}05)${normal} qBittorrent ${cyan}4.1.6${normal}"
+    echo -e "${green}05)${normal} qBittorrent ${cyan}4.1.7${normal}"
 #   echo -e  "${blue}11)${normal} qBittorrent ${blue}4.2.0.alpha (unstable)${normal}"
     echo -e  "${blue}30)${normal} $language_select_another_version"
     echo -e "${green}40)${normal} qBittorrent ${cyan}$QB_repo_ver${normal} from ${cyan}repo${normal}"
@@ -706,8 +738,8 @@ while [[ -z $qb_version ]]; do
     [[ $qb_installed == Yes ]] &&
     echo -e "${bailanse}${bold} ATTENTION ${normal} ${blue}${bold}$lang_yizhuang ${underline}qBittorrent ${qbtnox_ver}${normal}"
 
-    read -ep "${bold}${yellow}$which_version_do_you_want${normal} (Default ${cyan}05${normal}): " version
-  # echo -ne "${bold}${yellow}$which_version_do_you_want${normal} (Default ${cyan}05${normal}): " ; read -e version
+    read -ep "${bold}${yellow}$which_version_do_you_want${normal} (Default ${cyan}06${normal}): " version
+  # echo -ne "${bold}${yellow}$which_version_do_you_want${normal} (Default ${cyan}06${normal}): " ; read -e version
 
     case $version in
         01 | 1) qb_version=3.3.11 ;;
@@ -715,12 +747,13 @@ while [[ -z $qb_version ]]; do
         03 | 3) qb_version=4.0.4 ;;
         04 | 4) qb_version=4.1.3 ;;
         05 | 5) qb_version=4.1.6 ;;
+        06 | 6) qb_version=4.1.7 ;;
         11) qb_version=4.2.0 ;;
         30) input_version && qb_version="${input_version_num}"  ;;
         40) qb_version=repo ;;
         50) qb_version=ppa ;;
         99) qb_version=No ;;
-        * | "") qb_version=4.1.6 ;;
+        * | "") qb_version=4.1.7 ;;
     esac
 
 done
@@ -1547,7 +1580,7 @@ fi
 # From swizzin
 if [[ $DISTROL == debian ]] && [[ ! $(grep "$CODENAME-backports" /etc/apt/sources.list) ]]; then
     echo "deb http://ftp.debian.org/debian $CODENAME-backports main" >> /etc/apt/sources.list
-    echo "deb-src deb http://ftp.debian.org/debian $CODENAME-backports main" >> /etc/apt/sources.list
+    echo "deb-src http://ftp.debian.org/debian $CODENAME-backports main" >> /etc/apt/sources.list
 fi
 
 apt-get -y update
