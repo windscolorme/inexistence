@@ -16,7 +16,7 @@ export PATH
 SYSTEMCHECK=1
 DeBUG=0
 script_lang=eng
-INEXISTENCEVER=1.1.4.0
+INEXISTENCEVER=1.1.4.1
 INEXISTENCEDATE=2019.09.09
 default_branch=master
 # --------------------------------------------------------------------------------
@@ -1067,6 +1067,8 @@ while [[ -z $rt_version ]]; do
     echo -e "${green}13)${normal} rTorrent ${cyan}0.9.4${normal} ($lang_ipv6_1)" ; }
     echo -e "${green}14)${normal} rTorrent ${cyan}0.9.6${normal} ($lang_4)"
     echo -e "${green}15)${normal} rTorrent ${cyan}0.9.7${normal} ($lang_ipv6_1)"
+    echo -e "${green}16)${normal} rTorrent ${cyan}0.9.8${normal} ($lang_ipv6_1)"
+    echo -e "${green}17)${normal} rTorrent ${cyan}feature-bind branch${normal} ($lang_ipv6_1)"
     echo -e   "${red}99)${normal} $lang_do_not_install rTorrent"
 
     [[ $rt_installed == Yes ]] &&
@@ -1079,6 +1081,8 @@ while [[ -z $rt_version ]]; do
         case $version in
             14) rt_version='0.9.6 IPv6 supported' ;;
             15) rt_version=0.9.7 ;;
+            16) rt_version=0.9.8 ;;
+            17) rt_version=feature ;;
             99) rt_version=No ;;
             "" | *) rt_version='0.9.6 IPv6 supported' ;;
         esac
@@ -1095,6 +1099,8 @@ while [[ -z $rt_version ]]; do
             13) rt_version='0.9.4 IPv6 supported' ;;
             14) rt_version='0.9.6 IPv6 supported' ;;
             15) rt_version=0.9.7 ;;
+            16) rt_version=0.9.8 ;;
+            17) rt_version=feature ;;
             99) rt_version=No ;;
             "" | *) rt_version='0.9.6 IPv6 supported' ;;
         esac
@@ -1104,8 +1110,9 @@ done
 
 [[ $IPv6Opt == -i ]] && rt_version=`echo $rt_version IPv6 supported`
 [[ `echo $rt_version | grep IPv6` ]] && IPv6Opt=-i
-[[ $rt_version == 0.9.7 ]] && IPv6Opt=-i
+[[ $rt_version =~ (0.9.7|0.9.8|feature) ]] && IPv6Opt=-i
 rt_versionIns=`echo $rt_version | grep -Eo [0-9].[0-9].[0-9]`
+[[ $rt_version == feature ]] && rt_versionIns=feature
 
 if [[ $rt_version == No ]]; then
     [[ $script_lang == eng ]] && echo "${baizise}rTorrent will ${baihongse}not${baizise} be installed${normal}"
