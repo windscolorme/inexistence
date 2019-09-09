@@ -4,7 +4,7 @@
 # Author: Aniverse
 
 script_update=2019.09.09
-script_version=r11019
+script_version=r11020
 
 ################################################################################################ Debug
 
@@ -180,16 +180,15 @@ EOF
 
 
 function qt_set_env() {
-    export PATH=/opt/qt59/bin:$PATH
-    export PKG_CONFIG_PATH=/opt/qt59/lib/pkgconfig:$PKG_CONFIG_PATH
-    qmake -v >> $OutputLOG 2>&1
-}
+    if dpkg -l | grep -q qt59base; then
+        export PATH=/opt/qt59/bin:$PATH
+        export PKG_CONFIG_PATH=/opt/qt59/lib/pkgconfig:$PKG_CONFIG_PATH
+    elif dpkg -l | grep -q qt-common; then
+        export PKG_CONFIG_PATH=/usr/local/Qt-5.9.8/lib/pkgconfig:$PKG_CONFIG_PATH
+        export PATH=/usr/local/Qt-5.9.8/bin:$PATH
+    fi
 
-
-function qt_set_env_self_deb() {
-    export PKG_CONFIG_PATH=/usr/local/Qt-5.9.8/lib/pkgconfig:$PKG_CONFIG_PATH
-    export PATH=/usr/local/Qt-5.9.8/bin:$PATH
-    qmake -v >> $OutputLOG 2>&1
+    { lines ; qmake -v ; lines ; } >> $OutputLOG 2>&1
 }
 
 
@@ -209,10 +208,10 @@ EOF
 
 
 function install_qt_deb() {
-    apt-get install -y build-essential libgl1-mesa-dev python3-dev python
+    apt-get install -y build-essential libgl1-mesa-dev python3-dev python >> $OutputLOG
     wget -nv https://sourceforge.net/projects/inexistence/files/deb/$CODENAME/qt-common.5.9.8.$CODENAME.amd64.deb/download -O qt.5.9.8.deb >> $OutputLOG 2>&1 ||
     { echo -e "${CW} Failed to wget qt deb${normal}" ; exit 1 ; }
-    dpkg -i qt.5.9.8.deb && ldconfig
+    dpkg -i qt.5.9.8.deb  >> $OutputLOG && ldconfig
 }
 
 
@@ -226,11 +225,9 @@ function install_qbittorrent_dependencies() {
             if [[ $CODENAME == stretch ]]; then
                 uninstall_qt_repo
                 install_qt_deb
-                qt_set_env_self_deb
             elif [[ $CODENAME == xenial ]]; then
                 uninstall_qt_repo
                 install_qt_ppa_xenial
-                qt_set_env
             fi
     else
         qt_required_version=5.5.1
@@ -244,7 +241,6 @@ function install_qbittorrent_dependencies() {
     elif [[ $CODENAME == jessie ]]; then
         install_qt_deb
         install_gcc_ppa_trusty
-        qt_set_env_self_deb
     fi
 
     status_lock=$AppNameLower-d
@@ -291,7 +287,7 @@ function compile_qbittorrent() {
         cd qBittorrent-$version
     fi
 
-    [[ $CODENAME =~ (jessie|stretch|xenial) ]] && qt_set_env
+    qt_set_env
   # For debug
     pkg-config --exists --print-errors "Qt5Core >= 10086" 2>&1 | awk '{print $NF}' | grep -oE [0-9.]+ >> $OutputLOG 2>&1
 
