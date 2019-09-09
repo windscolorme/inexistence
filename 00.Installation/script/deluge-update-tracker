@@ -1,17 +1,22 @@
 #!/bin/bash
 #
-# 2019.01.02
+# https://github.com/Aniverse/inexistence
+# Author: Aniverse
+#
+script_update=2019.08.12
+script_version=r20001
 
 torrentid=$1
 torrentname=$2
 torrentpath=$3
 
-log=/etc/inexistence/01.Log/deluge-update-tracker.log
-[[ ! -f $log ]] && { mkdir -p $(dirname $log) ; touch /etc/inexistence/01.Log/deluge-update-tracker.log ; }
+log=/log/script/deluge-update-tracker.log
+[[ ! -f $log ]] && { mkdir -p $(dirname $log) ; touch $log ; }
 
 # ddport=58846
-ddport=$(grep '"daemon_port": [0-9]*' ~/.config/deluge/core.conf | grep -oE "[0-9]+")
-[[ -z $ddport ]] && echo "ERROR: No daemon port detected!" >> $log
+ddport=$(grep '"daemon_port": [0-9]*' $HOME/.config/deluge/core.conf | grep -oE "[0-9]+")
+[[ -z $ddport ]] && echo "ERROR: No daemon port detected!" >> $log && exit 1
+[[ -z $(which deluge-console) ]] && echo "ERROR: No deluge-console detected!" >> $log && exit 1
 
 x=1
 while [ $x -le 45 ]; do
@@ -35,10 +40,9 @@ done
 
 #######################################################
 
-Usernamee=ANUSER
-Passwordd=ANPASS
-
 unused_codes_ignore_these() {
+    Usernamee=ANUSER
+    Passwordd=ANPASS
     line=$(/usr/bin/deluge-console "connect 127.0.0.1:$ddport $Usernamee $Passwordd; info" $1 | grep "Tracker status")
     echo $line >> $log
     case "$line" in
