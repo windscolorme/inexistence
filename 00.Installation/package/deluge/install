@@ -47,7 +47,7 @@ esac ; done
 
 AppName=Deluge
 AppNameLower=deluge
-DebName=deluge-seedbox # Include deluged, deluge-web, deluge-console and so on
+DebName=deluge-common # Include deluged, deluge-web, deluge-console and so on
 Need_SourceCode=yes
 pm_action=install
 
@@ -59,6 +59,7 @@ else
 fi
 
 set_variables_log_location
+check_var_OutputLOG
 [[ $debug == 1 ]] && debug_log_location
 
 ################################################################################################ Set Variables 2
@@ -68,15 +69,12 @@ lt_version=$(pkg-config --exists --print-errors "libtorrent-rasterbar >= 10086" 
 # [[ -z $version ]] && [[ -z $version ]] && [[ -z $mode ]] && version=1.3.15
 [[ -z $mode ]] && [[ -n $version ]] && mode=source
 [[ -z $mode ]] && [[ -n $branch  ]] && mode=source
-[[ -z $mode ]] && echo -e "\n${CW} Installation mode must be specified as apt, deb, deb2, deb3 or source${normal}\n" && cancel
-
+[[ ! $mode =~ (apt|ppa|source) ]] && echo -e "${CW} Mode can only be specified as apt, ppa or source${normal}" && exit 1
 [[ $mode == ppa ]] && [[ $DISTRO != Ubuntu ]] && echo -e "${normal}PPA is not support for $DISTRO, change installation mode from ppa to apt" && mode=apt
 
 latest_stable=` wget -qO- https://dev.deluge-torrent.org/wiki/ReleaseNotes | grep wiki/ReleaseNotes | grep -Eo "[12]\.[0-9.]+" | sed 's/">/ /' | awk '{print $1}' | head -n1 `
 [[ -z $latest_stable ]] && latest_stable=2.0.3
 
-# Check if ssl issue should be fix
-version_ge $version 1.3.11 || DESSL=Yes
 # Check if input branch is available
 git_repo="https://github.com/deluge-torrent/deluge"
 [[ -n $branch ]] && check_remote_git_repo_branch  $git_repo  $branch
@@ -88,13 +86,14 @@ AvailableVersion=$(  wget -qO- $DeSource | grep -o "deluge-[0-9]\{1,2\}\.[0-9]\{
 [[ -n $version ]] && source_type=release
 [[ -n $branch  ]] && source_type=git     # && version=$branch
 
+[[ -n $version ]] && version_s=$version
+[[ -n $branch  ]] && version_s=$(echo ----------------------)
+
 # Check if libtorrent below 1.1.2 is supported
 [[ -n $version ]] && version_ge $version 2.0 && version_ge $lt_ver 1.1.3 ||
 { echo -e "${CW} libtorrent-rasterbar 1.1.3 and later is required when installing deluge 2.0 and above${normal}" && exit 1 ; }
-
-[[ -n $version ]] && version_s=$version
-[[ -n $branch  ]] && version_s=$(wget -qO- https://raw.githubusercontent.com/qbittorrent/qBittorrent/$branch/dist/windows/options.nsi |grep -i "define PROG_VERSION" | grep -oE [0-9].[0-9.]+)
-
+# Check if ssl issue should be fix
+version_ge $version 1.3.11 || DESSL=Yes
 
 #version=$( apt-cache policy deluge | grep -B1 http | grep -Eo "[012]\.[0-9]+.[0-9]+" | head -n1 )
 
