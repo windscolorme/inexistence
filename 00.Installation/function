@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 #
-script_update=2019.07.21
-script_version=r10030
+script_update=2019.08.07
+script_version=r10031
 ################################################################################################ Usage Guide
 
 usage_guide() {
@@ -82,6 +82,11 @@ function lines() { printf "%-100s\n" "-" | sed 's/\s/-/g' ; }
 # (Check if a web site is reachable)
 function check_url() {
     if [[ `wget -S --spider $1 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then return 0 ; else return 1 ; fi
+}
+
+function check_var_OutputLOG() {
+    [[ -z $OutputLOG ]] && echo -e "${CW} NO OutputLOG variable found, please check if you have function installed" &&
+    exit 1
 }
 
 

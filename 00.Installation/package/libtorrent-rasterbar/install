@@ -4,7 +4,7 @@
 # Author: Aniverse
 #
 script_update=2019.07.25
-script_version=r11050
+script_version=r11051
 
 ################################################################################################ Debug
 
@@ -65,6 +65,7 @@ else
 fi
 
 set_variables_log_location
+check_var_OutputLOG
 [[ $debug == 1 ]] && debug_log_location
 
 ################################################################################################ Set Variables 2
@@ -199,7 +200,7 @@ function install_lt8_deb() {
     echo "status_lock=$status_lock" > /tmp/Variables
     rm -f /tmp/$status_lock.1.lock /tmp/$status_lock.2.lock
 
-    [[ $CODENAME == Buster ]] && { echo -e "Error: No libtorrent 1.0.11 deb package for Debian 10, please ust libtorrent 1.1 or later." ; exit 1 ; }
+    [[ $CODENAME == Buster ]] && { echo -e "Error: No libtorrent 1.0.11 deb package for Debian 10, please use libtorrent 1.1 or later." ; exit 1 ; }
     wget -O lt.$CODENAME.1.0.11.deb https://raw.githubusercontent.com/Aniverse/inexistence/files/debian.package/libtorrent-rasterbar-1.0.11.$CODENAME.amd64.deb >> $OutputLOG 2>&1
     dpkg -i lt.$CODENAME.1.0.11.deb >> $OutputLOG 2>&1 && touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock
 

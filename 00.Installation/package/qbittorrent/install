@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 
-script_update=2019.07.22
-script_version=r11016
+script_update=2019.08.07
+script_version=r11017
 
 ################################################################################################ Debug
 
@@ -12,7 +12,7 @@ usage_for_debug() {
     export local_packages=/etc/inexistence/00.Installation
     export s=$local_packages/package/qbittorrent/install
     rm -f $s ; nano $s
-    bash $s -v 4.1.6        --logbase $LogTimes
+    bash $s -v 4.1.7        --logbase $LogTimes
     bash <(wget -qO- https://github.com/Aniverse/inexistence/raw/master/00.Installation/package/qbittorrent/install) -v 4.1.6
 }
 
@@ -63,6 +63,7 @@ else
 fi
 
 set_variables_log_location
+check_var_OutputLOG
 [[ $debug == 1 ]] && debug_log_location
 
 ################################################################################################ Set Variables 2
@@ -88,7 +89,7 @@ else
     compile_flag='--disable-gui'
 fi
 
-ppa_version=4.1.6
+ppa_version=4.1.7
 
 if   [[ $CODENAME == jessie  ]]; then repo_version=3.1.10 ; ppa_version=3.3.16
 elif [[ $CODENAME == stretch ]]; then repo_version=3.3.7
