@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 #
-script_update=2019.07.28
-script_version=r21015
+script_update=2019.09.09
+script_version=r22016
 ################################################################################################
 
 usage_guide() {
@@ -15,7 +15,7 @@ bash <(wget -qO- https://github.com/Aniverse/inexistence/raw/master/00.Installat
 
 reboot=no
 
-OPTS=$(getopt -o m:d:s:6:r --long "mode:,ipv6:,duid:,subnet:,reboot" -- "$@")
+OPTS=$(getopt -o m:d:s:6:rh --long "mode:,ipv6:,duid:,subnet:,help,reboot" -- "$@")
 [ ! $? = 0 ] && { echo -e "Invalid option" ; exit 1 ; }
 eval set -- "$OPTS"
 
@@ -26,6 +26,7 @@ while true; do
     -d | --duid   ) DUID="$2"   ; shift 2 ;;
     -s | --subnet ) subnet="$2" ; shift 2 ;;
     -r | --reboot ) reboot=yes  ; shift   ;;
+    -h | --help   ) mode=h      ; shift   ;;
      * ) break ;;
   esac
 done
@@ -353,7 +354,7 @@ function sysctl_enable_ipv6() {
 
 function ask_reboot() {
     if [[ $reboot == no ]]; then
-        echo -ne "Press ${on_red}Ctrl+C${normal} ${bold}to exit${jiacu}, or press ${bailvse}ENTER${normal} ${bold}to reboot${normal} "
+        echo -e "${bold}Press ${on_red}Ctrl+C${normal} ${bold}to exit${jiacu}, or press ${bailvse}ENTER${normal} ${bold}to reboot${normal} "
         read input
     fi
   # echo -e "\n${bold}Rebooting ... ${normal}"
@@ -388,6 +389,23 @@ systemctl restart networking.service
 ping6 -c 5 ipv6.google.com"
 }
 
+function info() {
+    echo -e "
+ipv6.sh
+-m     Specify IPv6 configuring mode, can be specified ask_reboot
+       ik    Ikoula interfaces, only for Ikoula servers using /etc/network/interfaces
+       ik2   Ikoula netplan, only for Ikoula servers using Ubuntu 18.04
+       ol    Online interfaces, only for Online/OneProvider servers using /etc/network/interfaces
+       ol2   Online netplan, only for Online/OneProvider servers using Ubuntu 18.04
+       ol3   Online dibbler, only for Online/OneProvider servers
+-6     Inupt IPv6
+-d     Input DUID
+-s     Input subnet
+-r     Do a reboot without confirmation after executing script
+-h     Show this info
+"
+}
+
 ###########################################################################
 
 
@@ -397,6 +415,24 @@ case $mode in
     ol  ) online_interfaces   ; ipv6_test  ;  ask_reboot ;;
     ol2 ) online_netplan      ; ipv6_test  ;;
     ol3 ) online_dibbler      ; ask_reboot ;;
-    t   ) info ; ipv6_test ;;
+    t   ) info ; ipv6_test    ;;
+    h   ) show_help           ;;
 esac
 
+
+###########################################################################
+
+
+
+
+function references() {
+其实有些我也没参考，先留着当个备份，或许以后有用呢
+# https://npchk.info/online-net-dedibox-dibbler-ipv6/
+# https://blog.gloriousdays.pw/2019/03/14/configure-online-net-ipv6-on-ubuntu-18-04/
+# https://blog.gloriousdays.pw/2019/08/27/configure-ikoula-ipv6-under-netplan-io/
+# https://blog.gloriousdays.pw/2018/11/24/something-about-ikoula-seedbox/
+# https://blog.gloriousdays.pw/2017/10/11/online-dedibox-ipv6-configuration/
+# https://ymgblog.com/2018/03/14/383/
+# https://ymgblog.com/2018/03/12/345/
+sleep 0
+}
