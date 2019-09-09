@@ -4,7 +4,7 @@
 # Author: Aniverse
 
 script_update=2019.09.09
-script_version=r11020
+script_version=r11021
 
 ################################################################################################ Debug
 
@@ -204,14 +204,15 @@ deb-src http://snapshot.debian.org/archive/debian/20190321T212815Z/ jessie-updat
 deb-src http://snapshot.debian.org/archive/debian/20190321T212815Z/ jessie-backports main non-free contrib
 deb-src http://snapshot.debian.org/archive/debian-security/20190321T212815Z/ jessie/updates main non-free contrib
 EOF
+    echo 'Acquire::Check-Valid-Until 0;' > /etc/apt/apt.conf.d/10-no-check-valid-until
 }
 
 
 function install_qt_deb() {
-    apt-get install -y build-essential libgl1-mesa-dev python3-dev python >> $OutputLOG
+    apt-get install -y build-essential libgl1-mesa-dev python3-dev python >> $OutputLOG 2>&1
     wget -nv https://sourceforge.net/projects/inexistence/files/deb/$CODENAME/qt-common.5.9.8.$CODENAME.amd64.deb/download -O qt.5.9.8.deb >> $OutputLOG 2>&1 ||
     { echo -e "${CW} Failed to wget qt deb${normal}" ; exit 1 ; }
-    dpkg -i qt.5.9.8.deb  >> $OutputLOG && ldconfig
+    dpkg -i qt.5.9.8.deb >> $OutputLOG 2>&1 && ldconfig
 }
 
 
@@ -247,17 +248,18 @@ function install_qbittorrent_dependencies() {
     echo "status_lock=$status_lock" > /tmp/Variables
     rm -f /tmp/$status_lock.1.lock /tmp/$status_lock.2.lock 
 
+    qt_set_env
     qt_version=$(pkg-config --exists --print-errors "Qt5Core >= 10086" 2>&1 | awk '{print $NF}' | grep -oE [0-9.]+)
     version_ge  $qt_version  $qt_required_version && touch /tmp/$status_lock.1.lock || touch /tmp/$status_lock.2.lock
 
     [[ -f /tmp/$status_lock.1.lock ]] && touch $LOCKLocation/$AppNameLower.dependencies.lock
-    echo >> $OutputLOG
+    lines2 >> $OutputLOG
 }
 
 
 function compile_qbittorrent() {
     lines2 >> $OutputLOG
-    rm -rf qBittorrent.*
+    rm -rf qBittorren*
 
     if [[ -n $branch ]]; then
         git clone --depth=1 -b $branch https://github.com/qbittorrent/qBittorrent qBittorrent-$branch >> $OutputLOG 2>&1
