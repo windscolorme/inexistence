@@ -16,8 +16,8 @@ export PATH
 SYSTEMCHECK=1
 DeBUG=0
 script_lang=eng
-INEXISTENCEVER=1.1.4.1
-INEXISTENCEDATE=2019.09.09
+INEXISTENCEVER=1.1.4.2
+INEXISTENCEDATE=2019.09.14
 default_branch=master
 # --------------------------------------------------------------------------------
 
@@ -935,7 +935,7 @@ while [[ $lt_version = "" ]]; do
             while [[ $lt_version == "" ]]; do
                     echo -ne "${bold}${yellow}$which_version_do_you_want${normal} (Default ${cyan}99${normal}): " ; read -e version
                     case $version in
-                          01 | 1) echo -e "\n${CW} Deluge 2.0 or qBittorrent 4.2.0 requires libtorrent-rasterbar 1.1.3 or later${normal}\n" ;;
+                          01 | 1) echo -e "\n${CW} Deluge 2.0 or qBittorrent 4.2.0 requires libtorrent-rasterbar 1.1.11 or later${normal}\n" ;;
                           02 | 2) lt_version=RC_1_1 ;;
                           03 | 3) lt_version=RC_1_2 ;;
                           98    ) lt_version=system ;;
@@ -950,11 +950,11 @@ while [[ $lt_version = "" ]]; do
             while [[ $lt_version == "" ]]; do
                     echo -ne "${bold}${yellow}$which_version_do_you_want${normal} (Default ${cyan}02${normal}): " ; read -e version
                     case $version in
-                          01 | 1) echo -e "\n${CW} Deluge 2.0 or qBittorrent 4.2.0 requires libtorrent-rasterbar 1.1.3 or later${normal}\n" ;;
+                          01 | 1) echo -e "\n${CW} Deluge 2.0 or qBittorrent 4.2.0 requires libtorrent-rasterbar 1.1.11 or later${normal}\n" ;;
                           02 | 2) lt_version=RC_1_1 ;;
                           03 | 3) lt_version=RC_1_2 ;;
                           98    ) lt_version=system ;;
-                          99    ) echo -e "\n${CW} Deluge 2.0 or qBittorrent 4.2.0 requires libtorrent-rasterbar 1.1.3 or later${normal}\n" ;;
+                          99    ) echo -e "\n${CW} Deluge 2.0 or qBittorrent 4.2.0 requires libtorrent-rasterbar 1.1.11 or later${normal}\n" ;;
                           ""    ) lt_version=RC_1_1 ;;
                           *     ) echo -e "\n${CW} Please input a valid opinion${normal}\n" ;;
                     esac
@@ -980,7 +980,7 @@ while [[ $lt_version = "" ]]; do
             while [[ $lt_version == "" ]]; do
                     echo -ne "${bold}${yellow}$which_version_do_you_want${normal} (Default ${cyan}02${normal}): " ; read -e version
                     case $version in
-                          01 | 1) echo -e "\n${CW} Deluge 2.0 or qBittorrent 4.2.0 requires libtorrent-rasterbar 1.1.3 or later${normal}\n" ;;
+                          01 | 1) echo -e "\n${CW} Deluge 2.0 or qBittorrent 4.2.0 requires libtorrent-rasterbar 1.1.11 or later${normal}\n" ;;
                           02 | 2) lt_version=RC_1_1 ;;
                           03 | 3) lt_version=RC_1_2 ;;
                           98    ) lt_version=system ;;
@@ -1349,7 +1349,7 @@ while [[ -z $InsTools  ]]; do
     case $responce in
         [yY] | [yY][Ee][Ss]  ) InsTools=Yes ;;
         [nN] | [nN][Oo] | "" ) InsTools=No  ;;
-       *) InsTools=No ;;
+        *) InsTools=No ;;
     esac
 done
 
@@ -1620,7 +1620,7 @@ done
 # Install atop may causedpkg failure in some VPS, so install it separately
 [[ ! -d /proc/vz ]] && apt-get -y install atop
 
-test -z "$install_list" || apt-get -y install $install_list
+test -z "$install_list" || apt-get --force-yes -o Dpkg::Options::="--force-confnew" --force-yes -o Dpkg::Options::="--force-confdef" -y install $install_list
 if [ ! $? = 0 ]; then
     echo -e "\n${baihongse}${shanshuo}${bold} ERROR ${normal} ${red}${bold}Failed to install packages, please check it and rerun once it is resolved${normal}\n"
     kill -s TERM $TOP_PID
