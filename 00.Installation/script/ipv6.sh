@@ -4,7 +4,7 @@
 # Author: Aniverse
 #
 script_update=2019.09.14
-script_version=r23122
+script_version=r23123
 ################################################################################################
 
 usage_guide() {
@@ -15,7 +15,7 @@ bash <(wget -qO- https://github.com/Aniverse/inexistence/raw/master/00.Installat
 
 reboot=no
 
-OPTS=$(getopt -o m:d:s:6:rht --long "mode:,ipv6:,duid:,subnet:,help,reboot,test" -- "$@")
+OPTS=$(getopt -o m:d:s:6:rhtc --long "mode:,ipv6:,duid:,subnet:,help,reboot,test,clean" -- "$@")
 [ ! $? = 0 ] && { echo -e "Invalid option" ; exit 1 ; }
 eval set -- "$OPTS"
 
@@ -28,6 +28,7 @@ while true; do
     -r | --reboot ) reboot=yes  ; shift   ;;
     -h | --help   ) mode=h      ; shift   ;;
     -t | --test   ) mode=t      ; shift   ;;
+    -c | --clean  ) mode=c      ; shift   ;;
      * ) break ;;
   esac
 done
@@ -384,6 +385,7 @@ function ask_reboot() {
 }
 
 function cleanup() {
+    echo -n "Cleanup ... "
     if [[ $type == ifdown ]]; then
         interfaces_file_clean
     else
@@ -400,6 +402,7 @@ function cleanup() {
     rm -f /etc/systemd/system/dhclient-netplan.service
     rm -f /etc/systemd/system/dibbler-client.service
     rm -f /etc/dhcp/dhclient6.conf    /etc/dibbler/client.conf   /var/lib/dibbler/client-duid
+    echo "DONE"
 }
 
 function info() {
@@ -431,19 +434,40 @@ ping6 -c 5 ipv6.google.com"
 
 function show_help() {
     echo -e "
-ipv6.sh
+${bold}${baiqingse}IPv6 Script $script_version${normal}
+
+${bold}${green}Usage: ${normal}
 -m     Specify IPv6 configuring mode, can be specified ask_reboot
-       ik    Ikoula interfaces, only for Ikoula servers using /etc/network/interfaces
-       ik2   Ikoula netplan, only for Ikoula servers using Ubuntu 18.04
-       ol    Online interfaces, only for Online/OneProvider servers using /etc/network/interfaces
-       ol2   Online netplan, only for Online/OneProvider servers using Ubuntu 18.04
+       ik    Ikoula interfaces, only for Ikoula servers ifdown
+             Typically, This is for Ubuntu 14.04/16.04, Debian 7/8/9/10
+       ik2   Ikoula netplan, only for Ikoula servers using netplan
+             Typically, This is ONLY for Ubuntu 18.04
+       ol    Online interfaces, only for Online/OneProvider servers using ifdown
+             Typically, This is for Ubuntu 16.04, Debian 8/9/10
+       ol2   Online netplan, only for Online/OneProvider servers using netplan
+             Typically, This is ONLY for Ubuntu 18.04
        ol3   Online dibbler, only for Online/OneProvider servers
+             Typically, This is for Ubuntu 16.04/18.04, Debian 8/9/10
 -6     Inupt IPv6
 -d     Input DUID
 -s     Input subnet
 -r     Do a reboot without confirmation after executing script
 -h     Show this info
 -t     Test IPv6 connectivity
+
+${bold}${green}Examples: ${normal}
+
+Ikoula Dedicated Server using Ubuntu 16.04
+${underline}ipv6 -m ik${reset_underline}
+
+Ikoula Dedicated Server using Ubuntu 18.04
+${underline}ipv6 -m ik2${reset_underline}
+
+OneProvider Dedicated Server using Debian 9
+${underline}ipv6 -m ol    -6 2001:3bc8:2490::    -d 00:03:00:02:19:c4:c9:e3:75:26  -s 56${reset_underline}
+
+Online Dedicated Server using Ubuntu 18.04
+${underline}ipv6 -m ol3   -6 2001:cb6:2521:240:: -d 00:03:00:01:d3:3a:15:b4:43:ad  -s 56${reset_underline}
 "
 }
 
