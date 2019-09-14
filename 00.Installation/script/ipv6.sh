@@ -4,7 +4,7 @@
 # Author: Aniverse
 #
 script_update=2019.09.14
-script_version=r23020
+script_version=r23122
 ################################################################################################
 
 usage_guide() {
@@ -189,7 +189,7 @@ Wants=network.target
 Before=network.target
 [Service]
 Type=forking
-ExecStart=/sbin/dhclient -cf /etc/dhcp/dhclient6.conf -6 -P -v $interface
+ExecStart=$(which dhclient) -cf /etc/dhcp/dhclient6.conf -6 -P -v $interface
 [Install]
 WantedBy=multi-user.target
 EOF
@@ -287,7 +287,7 @@ function dibbler_install() {
 
 
 function online_dibbler_action() {
-    mkdir -p /var/lib/dibbler    /etc/dibbler/
+    mkdir -p       /var/lib/dibbler    /etc/dibbler/
     echo "$DUID" > /var/lib/dibbler/client-duid
     cat << EOF > /etc/dibbler/client.conf
 log-level 7
@@ -383,6 +383,25 @@ function ask_reboot() {
     init 6
 }
 
+function cleanup() {
+    if [[ $type == ifdown ]]; then
+        interfaces_file_clean
+    else
+        netplan_netcfg_file_clean
+    fi
+    systemctl stop    dhclient-netplan.service  2>/dev/null
+    systemctl stop    dhclient.service          2>/dev/null
+    systemctl stop    dibbler-client.service    2>/dev/null
+    systemctl disable dhclient-netplan.service  2>/dev/null
+    systemctl disable dhclient.service          2>/dev/null
+    systemctl disable dibbler-client.service    2>/dev/null
+    systemctl daemon-reload
+    rm -f /etc/systemd/system/dhclient.service
+    rm -f /etc/systemd/system/dhclient-netplan.service
+    rm -f /etc/systemd/system/dibbler-client.service
+    rm -f /etc/dhcp/dhclient6.conf    /etc/dibbler/client.conf   /var/lib/dibbler/client-duid
+}
+
 function info() {
     echo -e "
 script_update=$script_update
@@ -439,6 +458,7 @@ case $mode in
     ol3 ) online_dibbler      ; ask_reboot ;;
     t   ) info ; ipv6_test    ;;
     h   ) show_help           ;;
+    c   ) cleanup             ;;
 esac
 
 
