@@ -162,6 +162,12 @@ function install_lt_source() {
                 --disable-debug --enable-encryption --with-libgeoip=system \
                 CXXFLAGS=-std=c++11  >> $OutputLOG 2>&1 
                 # For both Deluge and qBittorrent
+1
+    if [[ $version == 1.1* ]]; then
+        sed -i 's|, (arg("seconds") = 0, arg("tracker_idx") = -1, arg("flags") = 0|, (arg("seconds") = 0, arg("tracker_idx") = -1, arg("flags") = 1|g' bindings/python/src/torrent_handle.cpp
+    elif [[ $version == 1.2* ]]; then
+        sed -i 's|static constexpr reannounce_flags_t ignore_min_interval = 0_bit|static constexpr reannounce_flags_t ignore_min_interval = 1_bit|g' include/libtorrent/torrent_handle.hpp
+    fi
 
     make -j$MAXCPUS  >> $OutputLOG 2>&1
     rm -rf $SCLocation/tmp-$AppNameLower
