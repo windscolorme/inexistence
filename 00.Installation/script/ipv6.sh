@@ -4,7 +4,7 @@
 # Author: Aniverse
 #
 script_update=2019.09.14
-script_version=r23019
+script_version=r23020
 ################################################################################################
 
 usage_guide() {
@@ -410,7 +410,7 @@ systemctl restart networking.service
 ping6 -c 5 ipv6.google.com"
 }
 
-function info() {
+function show_help() {
     echo -e "
 ipv6.sh
 -m     Specify IPv6 configuring mode, can be specified ask_reboot
@@ -434,11 +434,11 @@ ipv6.sh
 case $mode in
     ik  ) ikoula_interfaces   ; ask_reboot ;;
     ik2 ) ikoula_netplan      ; ipv6_test  ;;
-    ol  ) online_interfaces   ; ipv6_test  ;; ask_reboot ;;
+    ol  ) online_interfaces   ; ipv6_test   ; ask_reboot ;;
     ol2 ) online_netplan      ; ipv6_test  ;;
     ol3 ) online_dibbler      ; ask_reboot ;;
-    t   ) ipv6_test           ;;
-    h   ) info                ;;
+    t   ) info ; ipv6_test    ;;
+    h   ) show_help           ;;
 esac
 
 
