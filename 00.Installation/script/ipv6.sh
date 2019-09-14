@@ -3,8 +3,8 @@
 # https://github.com/Aniverse/inexistence
 # Author: Aniverse
 #
-script_update=2019.09.09
-script_version=r22016
+script_update=2019.09.14
+script_version=r22017
 ################################################################################################
 
 usage_guide() {
@@ -188,7 +188,7 @@ function online_interfaces() {
     file_backup
     if [[ ! $(grep -q "iface $interface inet6 static" /etc/network/interfaces) ]]; then
         interfaces_file_clean
-        online_interface_file_mod
+        online_interfaces_file_mod
     fi
     cat << EOF > /etc/dhcp/dhclient6.conf
 interface \"$interface\" {
@@ -252,7 +252,7 @@ EOF
 
 
 function dibbler_install() {
-    dpkg-query -W -f='${Status}' build-essential 2>/dev/null | grep -q "ok installed" && apt-get install -y build-essential
+    dpkg-query -W -f='${Status}' build-essential 2>/dev/null | grep -q "ok installed" || apt-get install -y build-essential
     wget https://netix.dl.sourceforge.net/project/dibbler/dibbler/1.0.1/dibbler-1.0.1.tar.gz
     tar zxvf dibbler-1.0.1.tar.gz
     cd dibbler-1.0.1
@@ -331,7 +331,8 @@ function interfaces_file_clean() {
 }
 
 function systemctl_restart() {
-    systemctl restart networking.service || echo -e "\n${red}systemctl restart networking.service FAILED${normal}"
+  # systemctl restart networking.service || echo -e "\n${red}systemctl restart networking.service FAILED${normal}"
+    sleep 0
 }
 
 function ipv6_test() {
@@ -410,9 +411,9 @@ ipv6.sh
 
 
 case $mode in
-    ik  ) ikoula_interfaces   ; ipv6_test  ;;
+    ik  ) ikoula_interfaces   ; ask_reboot ;;
     ik2 ) ikoula_netplan      ; ipv6_test  ;;
-    ol  ) online_interfaces   ; ipv6_test  ;  ask_reboot ;;
+    ol  ) online_interfaces   ; ask_reboot ;;
     ol2 ) online_netplan      ; ipv6_test  ;;
     ol3 ) online_dibbler      ; ask_reboot ;;
     t   ) info ; ipv6_test    ;;
