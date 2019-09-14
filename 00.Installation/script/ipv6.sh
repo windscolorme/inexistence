@@ -4,7 +4,7 @@
 # Author: Aniverse
 #
 script_update=2019.09.14
-script_version=r22017
+script_version=r23019
 ################################################################################################
 
 usage_guide() {
@@ -15,7 +15,7 @@ bash <(wget -qO- https://github.com/Aniverse/inexistence/raw/master/00.Installat
 
 reboot=no
 
-OPTS=$(getopt -o m:d:s:6:rh --long "mode:,ipv6:,duid:,subnet:,help,reboot" -- "$@")
+OPTS=$(getopt -o m:d:s:6:rht --long "mode:,ipv6:,duid:,subnet:,help,reboot,test" -- "$@")
 [ ! $? = 0 ] && { echo -e "Invalid option" ; exit 1 ; }
 eval set -- "$OPTS"
 
@@ -27,6 +27,7 @@ while true; do
     -s | --subnet ) subnet="$2" ; shift 2 ;;
     -r | --reboot ) reboot=yes  ; shift   ;;
     -h | --help   ) mode=h      ; shift   ;;
+    -t | --test   ) mode=t      ; shift   ;;
      * ) break ;;
   esac
 done
@@ -170,49 +171,17 @@ EOF
 ################################################################################################
 
 
-function online_interfaces_file_mod() {
-    cat << EOF >> /etc/network/interfaces
-### Added by IPv6_Script ###
-iface $interface inet6 static
-address $IPv6
-netmask $subnet
-accept_ra 1
-pre-up dhclient -cf /etc/dhcp/dhclient6.conf -pf /run/dhclient6.$interface.pid -6 -P $interface
-pre-down dhclient -x -pf /run/dhclient6.$interface.pid
-### IPv6_Script END ###
-EOF
-}
-
-# Online／OneProvider Paris 独服，Ubuntu 16.04，Debian 8/9/10
-function online_interfaces() {
-    file_backup
-    if [[ ! $(grep -q "iface $interface inet6 static" /etc/network/interfaces) ]]; then
-        interfaces_file_clean
-        online_interfaces_file_mod
-    fi
+function write_dhclient6_conf() {
     cat << EOF > /etc/dhcp/dhclient6.conf
 interface \"$interface\" {
 send dhcp6.client-id $DUID;
 request;
 }
 EOF
-    systemctl_restart
 }
 
 
-
-
-# Online／OneProvider Paris 独服，Ubuntu 18.04 系统（netplan）
-function online_netplan() {
-    check_var
-    file_backup
-
-    cat << EOF > /etc/dhcp/dhclient6.conf
-interface "$interface" {
-  send dhcp6.client-id $DUID;
-  request;
-}
-EOF
+function write_dhclient6_systemd() {
     cat << EOF > /etc/systemd/system/dhclient.service
 [Unit]
 Description=dhclient for sending DUID IPv6
@@ -224,6 +193,12 @@ ExecStart=/sbin/dhclient -cf /etc/dhcp/dhclient6.conf -6 -P -v $interface
 [Install]
 WantedBy=multi-user.target
 EOF
+    systemctl daemon-reload
+    systemctl enable dhclient.service
+}
+
+
+function write_dhclient_netplan_systemd() {
     cat << EOF > /etc/systemd/system/dhclient-netplan.service
 [Unit]
 Description=redo netplan apply after dhclient
@@ -236,18 +211,64 @@ ExecStart=/usr/sbin/netplan apply
 [Install]
 WantedBy=dhclient.service
 EOF
+    systemctl daemon-reload
+    systemctl enable dhclient-netplan.service
+}
+
+
+
+function online_interfaces_file_mod() {
+    cat << EOF >> /etc/network/interfaces
+### Added by IPv6_Script ###
+iface $interface inet6 static
+address $IPv6
+netmask $subnet
+#accept_ra 1
+#pre-up modprobe ipv6
+#pre-up dhclient -cf /etc/dhcp/dhclient6.conf -pf /run/dhclient6.$interface.pid -6 -P $interface
+#pre-down dhclient -x -pf /run/dhclient6.$interface.pid
+### IPv6_Script END ###
+EOF
+}
+
+# Online／OneProvider Paris 独服，Ubuntu 16.04，Debian 8/9/10
+function online_interfaces() {
+    file_backup
+    if [[ ! $(grep -q "iface $interface inet6 static" /etc/network/interfaces) ]]; then
+        interfaces_file_clean
+        online_interfaces_file_mod
+    fi
+    write_dhclient6_conf
+    write_dhclient6_systemd
+    systemctl start dhclient.service
+    systemctl_restart
+}
+
+
+
+
+
+
+
+# Online／OneProvider Paris 独服，Ubuntu 18.04 系统（netplan）
+function online_netplan() {
+    check_var
+    file_backup
+
+    write_dhclient6_conf
+    write_dhclient6_systemd
+    write_dhclient_netplan_systemd
+    netplan_netcfg_file_clean
     cat << EOF >> /etc/netplan/01-netcfg.yaml
+### Added by IPv6_Script ###
       dhcp6: no
       accept-ra: yes
       addresses:
       - $IPv6/$subnet
+### IPv6_Script END ###
 EOF
-
-    systemctl daemon-reload
     systemctl start dhclient.service
     systemctl start dhclient-netplan.service
-    systemctl enable dhclient.service
-    systemctl enable dhclient-netplan.service
 }
 
 
@@ -279,14 +300,7 @@ pd
 EOF
     file_backup
     interfaces_file_clean
-    cat << EOF >> /etc/network/interfaces
-
-### Added by IPv6_Script ###
-iface $interface inet6 static
-address $IPv6
-netmask $subnet
-### IPv6_Script END ###
-EOF
+    online_interfaces_file_mod
     cat << EOF > /etc/systemd/system/dibbler-client.service
 [Unit]
 Description=Dibbler Client
@@ -327,6 +341,12 @@ function file_backup() {
 function interfaces_file_clean() {
     while grep -q "IPv6_Script" /etc/network/interfaces ; do
         sed -i '$d' /etc/network/interfaces
+    done
+}
+
+function netplan_netcfg_file_clean() {
+    while grep -q "IPv6_Script" /etc/netplan/01-netcfg.yaml ; do
+        sed -i '$d' /etc/netplan/01-netcfg.yaml
     done
 }
 
@@ -404,6 +424,7 @@ ipv6.sh
 -s     Input subnet
 -r     Do a reboot without confirmation after executing script
 -h     Show this info
+-t     Test IPv6 connectivity
 "
 }
 
@@ -413,11 +434,11 @@ ipv6.sh
 case $mode in
     ik  ) ikoula_interfaces   ; ask_reboot ;;
     ik2 ) ikoula_netplan      ; ipv6_test  ;;
-    ol  ) online_interfaces   ; ask_reboot ;;
+    ol  ) online_interfaces   ; ipv6_test  ;; ask_reboot ;;
     ol2 ) online_netplan      ; ipv6_test  ;;
     ol3 ) online_dibbler      ; ask_reboot ;;
-    t   ) info ; ipv6_test    ;;
-    h   ) show_help           ;;
+    t   ) ipv6_test           ;;
+    h   ) info                ;;
 esac
 
 
@@ -435,5 +456,6 @@ function references() {
 # https://blog.gloriousdays.pw/2017/10/11/online-dedibox-ipv6-configuration/
 # https://ymgblog.com/2018/03/14/383/
 # https://ymgblog.com/2018/03/12/345/
+# https://documentation.online.net/en/dedicated-server/network/ipv6/prefix
 sleep 0
 }
