@@ -1986,7 +1986,7 @@ else
     cd qBittorrent-$qb_version
 
     if [[ $qb_version == 4.2.0 ]]; then
-        git checkout master
+        git checkout release-$qb_version
     elif [[ $qb_version == 3.3.17 ]]; then
         git checkout release-3.3.11
         git config --global user.email "you@example.com"
